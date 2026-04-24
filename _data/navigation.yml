@@ -1,0 +1,14 @@
+# Top navigation bar — shown on every page
+# Edit labels/urls here; the theme picks this up automatically.
+
+main:
+  - title: "Home"
+    url: /
+  - title: "About"
+    url: /about/
+  - title: "Publications"
+    url: /publications/
+  - title: "Projects"
+    url: /projects/
+  - title: "Archive"
+    url: /posts/
