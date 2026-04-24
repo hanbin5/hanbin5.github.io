@@ -1,0 +1,21 @@
+---
+/**
+ * ArchiveRow — one row of the archive list (idx | date | title | cat | read).
+ */
+export interface Props {
+  href: string;
+  idx: string;      // "№ 012"
+  date: string;     // "2026.04.18"
+  title: string;
+  category: string;
+  readTime: string; // "6 min"
+}
+const { href, idx, date, title, category, readTime } = Astro.props;
+---
+<a class="archive-row" href={href}>
+  <span class="idx">{idx}</span>
+  <span class="date">{date}</span>
+  <span class="title" set:html={title}></span>
+  <span class="cat">{category}</span>
+  <span class="read">{readTime}</span>
+</a>

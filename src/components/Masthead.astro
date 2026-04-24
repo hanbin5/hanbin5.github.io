@@ -1,0 +1,30 @@
+---
+/**
+ * Masthead — the giant "HANBIN" nameplate, with motto on the left and
+ * issue number / founding info on the right.
+ */
+export interface Props {
+  motto?: string;
+  issue?: string;
+  since?: string;
+  essayCount?: number;
+}
+const {
+  motto = "A quiet journal on\ntools, attention,\nand making things.",
+  issue = "Vol. II · No. 04",
+  since = "Est. 2024",
+  essayCount = 12,
+} = Astro.props;
+---
+<div class="masthead">
+  <div class="container">
+    <div class="motto" set:html={motto.replace(/\n/g, "<br/>")} />
+    <h1><a href="/">HANBIN</a></h1>
+    <div class="issue">
+      <strong>{issue}</strong>
+      {since}<br/>
+      {essayCount} Essays to Date
+    </div>
+  </div>
+</div>
+<div class="tagline">" 정리 중인 생각을 위한 작은 공간 "</div>

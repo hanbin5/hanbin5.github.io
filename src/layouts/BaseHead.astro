@@ -1,0 +1,41 @@
+---
+/**
+ * BaseHead — shared <head> contents.
+ * Kept isolated so layouts don't each maintain their own font/meta loaders.
+ */
+export interface Props {
+  title: string;
+  description?: string;
+  canonical?: string;
+}
+const { title, description = "A quiet journal on tools, attention, and making things.", canonical } = Astro.props;
+const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site);
+---
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="generator" content={Astro.generator} />
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
+
+<!-- OpenGraph -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalURL} />
+<meta name="twitter:card" content="summary_large_image" />
+
+<!-- RSS discovery -->
+<link rel="alternate" type="application/rss+xml" title="HANBIN — A Journal" href="/rss.xml" />
+
+<!-- Fonts (Google CDN; self-host is a future decision) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Nanum+Myeongjo:wght@400;700;800&display=swap"
+/>
+
+<!-- KaTeX CSS for math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" />

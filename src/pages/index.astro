@@ -1,0 +1,136 @@
+---
+import JournalLayout from "../layouts/JournalLayout.astro";
+import HeroStory from "../components/HeroStory.astro";
+import EditorBand from "../components/EditorBand.astro";
+import ArticleCard from "../components/ArticleCard.astro";
+import Longform from "../components/Longform.astro";
+import { getPublishedPosts, shortDate, postHref, postNumber } from "../lib/posts";
+
+/**
+ * Home page — the magazine cover layout.
+ *
+ * Why derive everything from the collection?
+ *   Because each new post in content/posts/ automatically:
+ *     - updates the "essay count" in the masthead,
+ *     - shifts the hero story (newest post),
+ *     - re-tiles the six-card grid,
+ *     - feeds the archive page and RSS.
+ *   No DOM editing needed to publish.
+ */
+const posts = await getPublishedPosts();
+const totalPosts = posts.length;
+
+// Compute "oldest rank" to fall back to auto-numbering when
+// a post doesn't supply one.
+const oldestFirst = [...posts].reverse();
+const rankById = new Map<string, number>();
+oldestFirst.forEach((p, i) => rankById.set(p.id, i + 1));
+
+const hero = posts[0];
+const issueCards = posts.slice(1, 7);       // next six
+const longformPost = posts[0];              // double-duty: also feature
+
+// Departments — static for now; a future enhancement could pull from
+// a separate `departments/` collection.
+const depts = [
+  { date: "On the Desk · Apr", title: "이번 달 쓰고 있는 앱 3개와 펜 1자루" },
+  { date: "Bookmarks · Apr",   title: "이번 주 읽은 링크 모음 — UI, 노동, 느린 기술" },
+  { date: "Notes · Apr",       title: "반쯤 쓰다 만 문장들 — 아홉 개" },
+  { date: "Soundtrack · Apr",  title: "글 쓸 때 듣는 플레이리스트 (Spotify)" },
+];
+
+// Issue number from the newest post's `issue` field (if any).
+const issueLabel = hero?.data.issue
+  ? `Vol. II · No. ${String(hero.data.issue).padStart(2, "0")}`
+  : "Vol. II · No. 04";
+---
+<JournalLayout
+  title="HANBIN — A Journal"
+  description="정리 중인 생각을 위한 작은 공간."
+  issue={issueLabel}
+  essayCount={totalPosts}
+>
+  {hero && (
+    <HeroStory
+      category={hero.data.category.toUpperCase()}
+      headline={hero.data.title}
+      deck={hero.data.dek ?? ""}
+      readTime={hero.data.readtime ?? ""}
+      date={hero.data.date.toISOString().slice(0, 10).replace(/-/g, ".")}
+      href={postHref(hero)}
+    />
+  )}
+
+  <EditorBand />
+
+  <section class="issue-section" id="issue">
+    <div class="container">
+      <div class="section-head">
+        <h2><span class="num">§ 01</span>In This Issue</h2>
+        <div class="rule"></div>
+        <div class="count">{issueCards.length} Essays</div>
+      </div>
+
+      <div class="grid-3">
+        {issueCards.map((p) => (
+          <ArticleCard
+            href={postHref(p)}
+            category={p.data.category}
+            date={shortDate(p.data.date)}
+            number={postNumber(p, rankById.get(p.id) ?? 0)}
+            title={p.data.title}
+            dek={p.data.dek ?? ""}
+            readTime={p.data.readtime ?? ""}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    {longformPost && (
+      <Longform
+        title={longformPost.data.title}
+        depts={depts}
+      >
+        <p>
+          쓴다는 행위에는 이상한 역설이 있다. 쓸 게 생겨서 쓰는 게 아니라,
+          쓰기 시작해야 비로소 쓸 게 보인다. 책상에 앉기 전까지 나는
+          내가 어떤 생각을 하고 있는지 정확히 알지 못한다.
+        </p>
+        <p>
+          그래서 이 저널을 만든 것도 "괜찮은 생각이 모였을 때 정리해야지"라는
+          순서가 아니었다. 오히려 반대였다. 정리할 공간을 먼저 만들어두면,
+          정리할 만한 것들이 생기기 시작한다. 책장이 먼저 있어야 책을 사기 시작하는 것처럼.
+        </p>
+        <p>
+          이번 호는 그 첫 번째 선반 위에 올려둔 여섯 편이다. 완성된 책이라기보다
+          반쯤 접힌 초고에 가깝다. 읽어주셔서 감사하다는 말은 뒤로 미루고,
+          혹시 같은 선반을 만들고 계시다면 조용히 인사 한 번 건네고 싶다.
+        </p>
+      </Longform>
+    )}
+  </div>
+
+  <section class="archive" id="archive-preview">
+    <div class="container">
+      <div class="section-head">
+        <h2><span class="num">§ 03</span>The Archive</h2>
+        <div class="rule"></div>
+        <div class="count"><a href="/archive">전체 보기 →</a></div>
+      </div>
+
+      <div class="archive-list">
+        {posts.slice(0, 8).map((p) => (
+          <a class="archive-row" href={postHref(p)}>
+            <span class="idx">№ {String(rankById.get(p.id) ?? 0).padStart(3, "0")}</span>
+            <span class="date">{p.data.date.toISOString().slice(0, 10).replace(/-/g, ".")}</span>
+            <span class="title" set:html={p.data.title}></span>
+            <span class="cat">{p.data.category}</span>
+            <span class="read">{p.data.readtime ?? ""}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</JournalLayout>

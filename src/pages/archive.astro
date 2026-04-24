@@ -1,0 +1,39 @@
+---
+import JournalLayout from "../layouts/JournalLayout.astro";
+import { getPublishedPosts, longDate, postHref } from "../lib/posts";
+
+const posts = await getPublishedPosts();
+
+// Rank from oldest (for the "№ xxx" column).
+const oldestFirst = [...posts].reverse();
+const rankById = new Map<string, number>();
+oldestFirst.forEach((p, i) => rankById.set(p.id, i + 1));
+---
+<JournalLayout
+  title="Archive — HANBIN"
+  description="전체 아카이브 — published essays from HANBIN · A Journal."
+  issue={`All ${posts.length} Essays`}
+  essayCount={posts.length}
+>
+  <section class="archive" id="archive">
+    <div class="container">
+      <div class="section-head">
+        <h2><span class="num">§ 03</span>The Archive</h2>
+        <div class="rule"></div>
+        <div class="count">{posts.length} entries</div>
+      </div>
+
+      <div class="archive-list">
+        {posts.map((p) => (
+          <a class="archive-row" href={postHref(p)}>
+            <span class="idx">№ {String(rankById.get(p.id) ?? 0).padStart(3, "0")}</span>
+            <span class="date">{longDate(p.data.date)}</span>
+            <span class="title" set:html={p.data.title}></span>
+            <span class="cat">{p.data.category}</span>
+            <span class="read">{p.data.readtime ?? ""}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</JournalLayout>

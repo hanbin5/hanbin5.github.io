@@ -1,0 +1,27 @@
+{
+  "name": "hanbin-journal",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HANBIN — A Journal. Personal magazine-style blog with Obsidian → Astro pipeline.",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "sync": "bash scripts/sync-from-vault.sh",
+    "sync:dev": "bash scripts/sync-from-vault.sh && astro dev"
+  },
+  "dependencies": {
+    "astro": "^4.16.0",
+    "@astrojs/rss": "^4.0.0",
+    "@astrojs/sitemap": "^3.2.0",
+    "rehype-katex": "^7.0.0",
+    "remark-math": "^6.0.0",
+    "katex": "^0.16.11"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

@@ -1,0 +1,29 @@
+---
+import { getCollection, render } from "astro:content";
+import PostLayout from "../../layouts/PostLayout.astro";
+
+/**
+ * Dynamic post route. Every non-draft post in content/posts/ produces
+ * a page at /posts/<its-folder-path>/<its-slug>.
+ */
+export async function getStaticPaths() {
+  const posts = await getCollection("post", ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id.replace(/\.md$/, "") },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+<PostLayout
+  title={post.data.title}
+  description={post.data.dek}
+  category={post.data.category}
+  date={post.data.date}
+  dek={post.data.dek}
+  readTime={post.data.readtime}
+>
+  <Content />
+</PostLayout>

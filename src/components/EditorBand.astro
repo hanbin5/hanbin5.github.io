@@ -1,0 +1,22 @@
+---
+/**
+ * EditorBand — the gray pullquote band under the hero.
+ */
+export interface Props {
+  quote?: string;
+  attrib?: string;
+}
+const {
+  quote = "완성된 글보다는 정리 중인 생각을 올립니다. 한 달에 한두 편, 읽을 만한 길이로, 천천히 쌓아갑니다.",
+  attrib = "— 한빈, 편집자",
+} = Astro.props;
+---
+<section class="band">
+  <div class="container">
+    <div class="label">Editor's Note</div>
+    <div>
+      <div class="pullquote">{quote}</div>
+      <div class="attrib">{attrib}</div>
+    </div>
+  </div>
+</section>

@@ -6,4 +6,18 @@ _site/
 vendor/
 Gemfile.lock
 .DS_Store
+
+# Astro
 node_modules/
+dist/
+.astro/
+.env
+.env.production
+
+# Editor
+.vscode/
+.idea/
+
+# Misc
+*.log
+.cache/

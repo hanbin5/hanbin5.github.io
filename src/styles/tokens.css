@@ -1,0 +1,44 @@
+/* =====================================================================
+   tokens.css — Design tokens for HANBIN · A Journal
+   ---------------------------------------------------------------------
+   Two layers:
+     1) CAU palette   — the raw brand colors (Pantone-accurate).
+     2) Semantic roles — what those colors mean in this site.
+   If the brand changes, edit layer (1) only. All components reference
+   layer (2), so no sweeping find/replace is ever required.
+   ===================================================================== */
+
+:root {
+  /* --- (1) CAU official palette ------------------------------------- */
+  --cau-blue:       #2155A4;  /* Pantone 2945C  (R33 G85 B164)   */
+  --cau-red:        #EF3340;  /* Pantone 032C                    */
+  --cau-gray:       #666666;  /* Cool Gray 8    (R102 G102 B102) */
+  --cau-light-gray: #E6E6E6;  /* Pantone 427C   (R230 G230 B230) */
+  --cau-silver:     #8A8D8F;  /* Pantone 877C                    */
+  --cau-gold:       #B08D57;  /* Pantone 873C                    */
+
+  /* --- (2) Semantic roles ------------------------------------------- */
+  --paper:         #ffffff;
+  --ink:           #111114;
+  --muted:         var(--cau-gray);
+  --line:          #111114;
+  --line-soft:     var(--cau-light-gray);
+  --accent:        var(--cau-blue);       /* primary link / footer / section number */
+  --accent-bright: #2e7fe3;                /* kickers & hover highlights            */
+  --band:          #dcdee3;                /* editor's-note gray band               */
+  --highlight:     #e8efff;                /* soft blue row-hover wash              */
+  --danger:        var(--cau-red);
+  --royal-gradient-a: #0e1f44;             /* hero image gradient endpoints         */
+  --royal-gradient-b: var(--cau-blue);
+  --royal-gradient-c: var(--accent-bright);
+
+  /* --- Typography --------------------------------------------------- */
+  --serif: "Fraunces", "Nanum Myeongjo", ui-serif, Georgia, serif;
+  --sans:  "Inter", -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --mono:  "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  /* --- Layout ------------------------------------------------------- */
+  --container-max: 1240px;
+  --container-pad: 32px;
+  --container-pad-sm: 20px;
+}

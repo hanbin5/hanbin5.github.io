@@ -1,0 +1,23 @@
+---
+/**
+ * TopBar — the thin monospace strip at the very top.
+ * Date is computed at build time so it stays fresh on every deploy.
+ */
+const today = new Date();
+const weekday = today.toLocaleDateString("en-US", { weekday: "long" });
+const month = today.toLocaleDateString("en-US", { month: "long" });
+const day = today.getDate();
+const year = today.getFullYear();
+const dateLabel = `${weekday} · ${month} ${day}, ${year} · Seoul`;
+---
+<div class="topbar">
+  <div class="container">
+    <div>{dateLabel}</div>
+    <div class="nav">
+      <a href="/#issue">이번 호</a>
+      <a href="/#longform">롱폼</a>
+      <a href="/archive">아카이브</a>
+      <a href="mailto:hanbinftr55@gmail.com">Contact</a>
+    </div>
+  </div>
+</div>

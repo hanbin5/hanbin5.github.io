@@ -1,0 +1,33 @@
+---
+/**
+ * JournalLayout — the magazine chrome: <head>, top bar, masthead, footer.
+ * Inner content (hero, bands, grids, archive) comes via <slot>.
+ */
+import BaseHead from "./BaseHead.astro";
+import TopBar from "../components/TopBar.astro";
+import Masthead from "../components/Masthead.astro";
+import Footer from "../components/Footer.astro";
+
+import "../styles/tokens.css";
+import "../styles/newsprint.css";
+
+export interface Props {
+  title: string;
+  description?: string;
+  issue?: string;
+  essayCount?: number;
+}
+const { title, description, issue, essayCount } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <BaseHead title={title} description={description} />
+</head>
+<body>
+  <TopBar />
+  <Masthead issue={issue} essayCount={essayCount} />
+  <slot />
+  <Footer />
+</body>
+</html>

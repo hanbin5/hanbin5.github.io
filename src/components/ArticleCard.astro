@@ -1,0 +1,22 @@
+---
+/**
+ * ArticleCard — one cell in the "In This Issue" grid-3.
+ */
+export interface Props {
+  href: string;
+  category: string;
+  date: string;        // pre-formatted short date e.g. "04.18"
+  number: string;      // e.g. "No. 012"
+  title: string;       // may contain <br/>
+  dek: string;
+  readTime: string;    // "6분 분량"
+}
+const { href, category, date, number, title, dek, readTime } = Astro.props;
+---
+<a class="article" href={href}>
+  <div class="art-meta"><span class="cat">{category}</span><span>{date}</span></div>
+  <div class="art-number">{number}</div>
+  <h3 class="art-title" set:html={title}></h3>
+  <p class="art-dek">{dek}</p>
+  <span class="art-read">{readTime}</span>
+</a>

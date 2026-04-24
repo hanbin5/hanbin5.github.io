@@ -1,0 +1,46 @@
+---
+/**
+ * HeroStory — the cover piece. Image on the left, headline/deck/byline on
+ * the right. The image is currently a generated gradient placeholder; when
+ * a post supplies `cover`, we'll swap that in later.
+ */
+export interface Props {
+  category?: string;
+  headline: string;     // may contain <em>…</em>
+  deck: string;
+  author?: string;
+  readTime?: string;    // e.g. "18분 분량"
+  date?: string;        // e.g. "2026.04.24"
+  href?: string;
+  caption?: string;     // image caption overlay
+}
+const {
+  category = "TOOLS",
+  headline,
+  deck,
+  author = "한빈",
+  readTime = "",
+  date = "",
+  href = "#",
+  caption = "Photograph · Studio, April 2026",
+} = Astro.props;
+---
+<section class="hero-story">
+  <div class="container">
+    <div class="hero-image">
+      <div class="caption">{caption}</div>
+    </div>
+    <div>
+      <div class="hero-meta">
+        <span class="category">{category}</span>
+        <span>The Cover Story</span>
+      </div>
+      <h1 class="hero-headline"><a href={href} set:html={headline}></a></h1>
+      <p class="hero-deck">{deck}</p>
+      <div class="byline">
+        <span class="author">Words by {author}</span>
+        <span>{readTime}{readTime && date ? " · " : ""}{date}</span>
+      </div>
+    </div>
+  </div>
+</section>

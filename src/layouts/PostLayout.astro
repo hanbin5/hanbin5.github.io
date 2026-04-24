@@ -1,0 +1,61 @@
+---
+/**
+ * PostLayout — used by individual posts. Inherits magazine chrome but uses
+ * a narrower reading column (prose.css) for the actual body.
+ */
+import BaseHead from "./BaseHead.astro";
+import TopBar from "../components/TopBar.astro";
+import Masthead from "../components/Masthead.astro";
+import Footer from "../components/Footer.astro";
+
+import "../styles/tokens.css";
+import "../styles/newsprint.css";
+import "../styles/prose.css";
+
+export interface Props {
+  title: string;
+  description?: string;
+  category?: string;
+  date?: Date;
+  dek?: string;
+  readTime?: string;
+  issueLabel?: string;
+}
+const { title, description, category, date, dek, readTime } = Astro.props;
+
+const displayDate = date
+  ? `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`
+  : "";
+
+// Strip HTML tags for the document <title> (browser tab / OG), keep them
+// in the visible <h1> so an author's <em>emphasis</em> still italicizes.
+const plainTitle = title.replace(/<[^>]+>/g, "");
+---
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <BaseHead title={`${plainTitle} — HANBIN`} description={description ?? dek} />
+</head>
+<body>
+  <TopBar />
+  <Masthead />
+
+  <div class="container">
+    <header class="post-header">
+      <div class="meta">
+        {category && <span class="cat">{category}</span>}
+        {displayDate && <span>{displayDate}</span>}
+        {readTime && <span>{readTime}</span>}
+      </div>
+      <h1 set:html={title}></h1>
+      {dek && <p class="dek">{dek}</p>}
+    </header>
+
+    <article class="prose">
+      <slot />
+    </article>
+  </div>
+
+  <Footer />
+</body>
+</html>
