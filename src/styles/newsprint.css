@@ -32,8 +32,27 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
 }
 .topbar .container {
-  display: flex; justify-content: space-between;
-  padding-top: 10px; padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+/* Brand sits flush-left. To center it instead, replace the `.brand` rule
+   below with `.brand { order: 0; margin: 0 auto; }` and give `.date` an
+   explicit `order: -1` so date still reads left. */
+.topbar .brand {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--ink);
+}
+.topbar .brand:hover { color: var(--accent); }
+.topbar .date {
+  flex: 1;
+  color: var(--muted);
 }
 .topbar .nav { display: flex; gap: 24px; }
 .topbar .nav a:hover { color: var(--accent); }
@@ -293,6 +312,16 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 16px;
 }
 .art-meta .cat { color: var(--accent-bright); font-weight: 500; }
+/* Secondary category label below project tag — subtler, italic, muted.
+   Shown only when ArticleCard receives both `project` and `category`. */
+.art-sub-cat {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: -10px;
+  margin-bottom: 12px;
+}
 .art-number {
   font-family: var(--serif);
   font-size: 11px;
@@ -413,6 +442,187 @@ a { color: inherit; text-decoration: none; }
   transition: color .2s;
 }
 
+/* ============ KANBAN BOARD (home: Projects × Time) ============ */
+.kanban-section {
+  padding: 72px 0 48px;
+}
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.kanban-column {
+  min-width: 0;          /* let long titles wrap instead of blowing out the column */
+  border-top: 2px solid var(--accent);
+  padding-top: 14px;
+}
+.kanban-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.kanban-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+.kanban-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.kanban-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kanban-card {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid var(--line-soft);
+  background: var(--paper);
+  color: inherit;
+  transition: border-color .15s, background .15s, transform .15s;
+}
+.kanban-card:hover {
+  border-color: var(--accent);
+  background: var(--highlight);
+  transform: translateY(-1px);
+}
+.kanban-card .card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.kanban-card .card-title {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  transition: color .15s;
+}
+.kanban-card:hover .card-title { color: var(--accent); }
+.kanban-card .card-dek {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 10px;
+  /* Clamp to 2 lines so columns stay tidy. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kanban-card .card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 8px;
+  border-top: 1px dotted var(--line-soft);
+}
+.kanban-card .card-cat {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--muted);
+}
+.kanban-card .card-read {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+.kanban-card .card-read::after { content: " →"; color: var(--accent); }
+
+/* "+N more in this project" — deep-links to /archive with filter preset. */
+.kanban-more {
+  display: block;
+  padding: 12px 16px;
+  border: 1px dashed var(--line-soft);
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.kanban-more:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--highlight);
+}
+.kanban-more::after { content: " →"; }
+
+/* ============ PROJECT FILTER (chip row above archive) ============ */
+.project-filter {
+  padding: 20px 0 32px;
+}
+.project-filter .filter-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 12px;
+  border: 1px solid var(--line-soft);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  line-height: 1.2;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
+}
+.chip .count {
+  margin-left: 6px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.chip.active .count { color: rgba(255,255,255,0.72); }
+
+.archive-empty {
+  padding: 48px 0;
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--muted);
+}
+
 /* ============ ARCHIVE STRIP ============ */
 .archive {
   padding: 72px 0;
@@ -527,7 +737,8 @@ footer ul a:hover { color: #fff; opacity: .85; }
 @media (max-width: 920px) {
   .container { padding: 0 var(--container-pad-sm); }
   .topbar .nav { gap: 14px; }
-  .topbar .nav a:nth-child(n+3) { display: none; }
+  /* Nav has only 3 items now (Archive / About / Contact), all fit on
+     narrow screens — no link needs hiding. */
   .masthead .container { grid-template-columns: 1fr; text-align: center; }
   .masthead .motto, .masthead .issue { text-align: center; }
   .hero-story .container { grid-template-columns: 1fr; gap: 32px; }

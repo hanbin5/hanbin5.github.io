@@ -14,12 +14,13 @@
     "sync:dev": "bash scripts/sync-from-vault.sh && astro dev"
   },
   "dependencies": {
-    "astro": "^4.16.0",
     "@astrojs/rss": "^4.0.0",
     "@astrojs/sitemap": "^3.2.0",
+    "astro": "^4.16.0",
+    "katex": "^0.16.11",
+    "prismjs": "^1.30.0",
     "rehype-katex": "^7.0.0",
-    "remark-math": "^6.0.0",
-    "katex": "^0.16.11"
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "typescript": "^5.5.0"

@@ -87,11 +87,14 @@
   padding: 0.5em 0;
 }
 
-/* Post header (above the body) */
+/* Post header (above the body). Both top and bottom borders are
+   constrained to 68ch so they match the text column exactly.
+   The brand itself now lives in the TopBar, so no extra block is needed. */
 .post-header {
   max-width: 68ch;
   margin: 0 auto;
-  padding: 48px 0 16px;
+  padding: 56px 0 20px;
+  border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 .post-header .meta {

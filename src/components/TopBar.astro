@@ -1,7 +1,9 @@
 ---
 /**
- * TopBar — the thin monospace strip at the very top.
- * Date is computed at build time so it stays fresh on every deploy.
+ * TopBar — the thin strip at the very top.
+ *   [HANBIN]   Friday · April 24, 2026 · Seoul          [nav links]
+ * Brand lives here so individual post pages don't need a second brand
+ * block underneath. Date is computed at build time.
  */
 const today = new Date();
 const weekday = today.toLocaleDateString("en-US", { weekday: "long" });
@@ -12,12 +14,12 @@ const dateLabel = `${weekday} · ${month} ${day}, ${year} · Seoul`;
 ---
 <div class="topbar">
   <div class="container">
-    <div>{dateLabel}</div>
+    <a class="brand" href="/">HANBIN</a>
+    <div class="date">{dateLabel}</div>
     <div class="nav">
-      <a href="/#issue">이번 호</a>
-      <a href="/#longform">롱폼</a>
-      <a href="/archive">아카이브</a>
-      <a href="mailto:hanbinftr55@gmail.com">Contact</a>
+      <a class="nav-archive" href="/archive">Archive</a>
+      <a class="nav-about" href="/about">About</a>
+      <a class="nav-contact" href="mailto:hanbinftr55@gmail.com">Contact</a>
     </div>
   </div>
 </div>

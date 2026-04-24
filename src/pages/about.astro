@@ -1,0 +1,306 @@
+---
+import JournalLayout from "../layouts/JournalLayout.astro";
+---
+<JournalLayout
+  title="About — HANBIN"
+  description="한빈(Hanbin) · 공식 소개"
+>
+  <section class="about">
+    <div class="container">
+      <div class="about-head">
+        <div class="kicker">§ About the Author</div>
+        <h1>한빈 <span class="en">/ Hanbin</span></h1>
+        <p class="lede">
+          [한 문장 자기 정의 — 예: "서울에서 로봇과 지각(perception)을 연구하는 공학도."]
+        </p>
+      </div>
+
+      <div class="about-grid">
+        <!-- ============ left: portrait + meta ============ -->
+        <aside class="about-portrait">
+          <div class="portrait-frame">
+            <div class="portrait-caption">Photograph · Studio, 2026</div>
+          </div>
+
+          <dl class="about-meta">
+            <dt>Based in</dt>
+            <dd>Seoul, Republic of Korea</dd>
+
+            <dt>Affiliation</dt>
+            <dd>[중앙대학교 ○○○학과 — 학위/학년]</dd>
+
+            <dt>Focus</dt>
+            <dd>Robotics · SLAM · State Estimation</dd>
+
+            <dt>Email</dt>
+            <dd><a href="mailto:hanbinftr55@gmail.com">hanbinftr55@gmail.com</a></dd>
+
+            <dt>GitHub</dt>
+            <dd><a href="https://github.com/hanbin5">github.com/hanbin5</a></dd>
+          </dl>
+        </aside>
+
+        <!-- ============ right: prose columns ============ -->
+        <div class="about-body">
+          <h2>Bio</h2>
+          <p>
+            [2~3문단짜리 자기소개. 지금까지의 걸어온 길, 현재 집중하는 주제,
+            이 저널을 시작한 이유 등을 자연스럽게. 예시:
+            "한빈은 중앙대학교에서 ○○○을 공부하며 주로 SLAM, 칼만 필터,
+            시각 관성 오도메트리 같은 지각·추정 문제를 다룬다. 저널 『HANBIN』은
+            연구 노트를 정리하고, 도구 사용에 대한 관찰을 기록하며, 읽은 것과
+            만든 것의 사이를 좁혀가기 위해 쓴다."]
+          </p>
+          <p>
+            [두 번째 문단 — 배경, 관심사, 추가 맥락.]
+          </p>
+
+          <h2>Research &amp; Work</h2>
+          <ul class="about-list">
+            <li>
+              <span class="when">2025 — 현재</span>
+              <span class="what">[프로젝트 또는 직책 (예: ORB-SLAM3 기반 실내 내비게이션 연구)]</span>
+            </li>
+            <li>
+              <span class="when">2024 — 2025</span>
+              <span class="what">[이전 프로젝트 / 인턴 / 과제]</span>
+            </li>
+            <li>
+              <span class="when">2023 — 2024</span>
+              <span class="what">[이전 프로젝트 / 교과목 / 학습 기록]</span>
+            </li>
+          </ul>
+
+          <h2>Writing</h2>
+          <p>
+            『HANBIN — A Journal』은 한 달에 한두 편, 읽을 만한 길이로 천천히
+            쌓아가는 개인 저널이다. 주제는 크게 세 갈래다:
+          </p>
+          <ul class="about-list">
+            <li><span class="what"><strong>Tools</strong> — 쓰는 도구에 대한 관찰 노트.</span></li>
+            <li><span class="what"><strong>Research</strong> — SLAM / 추정 / 로봇 인식에 대한 학습 기록.</span></li>
+            <li><span class="what"><strong>Life</strong> — 일상에서 발견한 작은 원칙들.</span></li>
+          </ul>
+
+          <h2>Elsewhere</h2>
+          <p>
+            공식 연락은 이메일로, 코드는 <a href="https://github.com/hanbin5">GitHub</a>,
+            짧은 생각은 이 저널에. 그 외의 채널은 운영하지 않는다.
+          </p>
+
+          <hr />
+
+          <p class="colophon">
+            이 사이트는 Astro 위에 직접 만든 신문/잡지 레이아웃을 올리고,
+            Obsidian Vault에서 마크다운을 동기화해 빌드한다. 디자인 토큰은
+            중앙대학교 공식 팔레트(CAU Blue · Red · Gray)를 따른다.
+            본문 세리프는 Fraunces, 산세리프는 Inter, 모노는 JetBrains Mono.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</JournalLayout>
+
+<style>
+  /* ===== About page — scoped styles ===== */
+
+  .about {
+    padding: 56px 0 96px;
+  }
+
+  .about-head {
+    max-width: 960px;
+    margin: 0 auto 56px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-head .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent-bright);
+    margin-bottom: 14px;
+  }
+  .about-head h1 {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: clamp(48px, 6vw, 84px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .about-head h1 .en {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 0.55em;
+    letter-spacing: -0.01em;
+  }
+  .about-head .lede {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(18px, 2vw, 22px);
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 60ch;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 64px;
+    align-items: start;
+  }
+
+  /* ---------- portrait column ---------- */
+  .about-portrait {
+    position: sticky;
+    top: 32px;
+  }
+  .portrait-frame {
+    aspect-ratio: 3 / 4;
+    background: linear-gradient(
+      135deg,
+      var(--royal-gradient-a) 0%,
+      var(--royal-gradient-b) 55%,
+      var(--royal-gradient-c) 100%
+    );
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .portrait-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.18) 0%, transparent 55%),
+      repeating-linear-gradient(45deg, transparent 0 8px, rgba(255,255,255,0.05) 8px 9px);
+  }
+  .portrait-caption {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    color: rgba(255,240,220,0.85);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-left: 2px solid var(--paper);
+    padding-left: 8px;
+    z-index: 1;
+  }
+
+  .about-meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px 20px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .about-meta dt {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    padding-top: 2px;
+  }
+  .about-meta dd {
+    font-family: var(--serif);
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .about-meta dd a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .about-meta dd a:hover { color: var(--accent-bright); }
+
+  /* ---------- prose column ---------- */
+  .about-body {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .about-body h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin: 40px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .about-body h2:first-child { margin-top: 0; }
+  .about-body p {
+    margin-bottom: 16px;
+    max-width: 62ch;
+  }
+  .about-body a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .about-body a:hover { color: var(--accent-bright); }
+
+  .about-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px 0;
+  }
+  .about-list li {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 20px;
+    padding: 10px 0;
+    border-bottom: 1px dotted var(--line-soft);
+  }
+  .about-list li:last-child { border-bottom: none; }
+  .about-list .when {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding-top: 4px;
+  }
+  .about-list .what { font-size: 16px; line-height: 1.55; }
+
+  .about-body hr {
+    border: none;
+    border-top: 1px solid var(--line-soft);
+    margin: 48px 0 28px;
+  }
+  .about-body .colophon {
+    font-size: 14px;
+    font-style: italic;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 920px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .about-portrait {
+      position: static;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .about-list li {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+  }
+</style>

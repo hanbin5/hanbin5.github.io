@@ -1,81 +1,148 @@
 # hanbin5.github.io — HANBIN · A Journal
 
-Personal magazine-style journal, built with **Astro** and deployed to GitHub Pages.
+Personal CV-oriented journal, built with **Astro** and deployed to GitHub Pages.
+Obsidian vault → repo via tag-based publishing.
 
 > Legacy single-file site preserved as `index.legacy.html` until the
-> Astro build is verified on production.
+> Astro build has been verified on production. Safe to delete after.
+
+---
 
 ## What lives where
 
 ```
 hanbin5.github.io/
 ├── content/
-│   ├── posts/         ← one .md per essay (frontmatter-driven)
-│   ├── concepts/      ← (synced from Obsidian vault)
-│   ├── projects/      ← (synced from Obsidian vault)
-│   └── repo-only/     ← never touched by sync scripts
+│   ├── posts/          ← synced from Obsidian (publish: true)
+│   └── repo-only/      ← authored here, never touched by sync
+├── obsidian-templates/
+│   ├── post.md         ← frontmatter template for new posts
+│   └── README.md       ← authoring guide (publish model, tags, KaTeX)
 ├── src/
-│   ├── content.config.ts      Zod schema for posts
-│   ├── layouts/               JournalLayout, PostLayout, BaseHead
-│   ├── components/            Masthead, HeroStory, ArticleCard, …
-│   ├── pages/                 index.astro, archive.astro, posts/[...slug]
-│   ├── lib/posts.ts           shared query helpers
+│   ├── content/config.ts       Zod schema
+│   ├── layouts/                JournalLayout, PostLayout, BaseHead
+│   ├── components/             Masthead, HeroStory, Footer, TopBar, …
+│   ├── pages/                  index (kanban), archive, about, posts/[...slug]
+│   ├── lib/posts.ts            shared query helpers
 │   └── styles/
-│       ├── tokens.css         CAU palette + semantic roles
-│       ├── newsprint.css      magazine/newspaper layout
-│       └── prose.css          article reading view
-├── scripts/sync-from-vault.sh
+│       ├── tokens.css          CAU palette + semantic tokens
+│       ├── newsprint.css       magazine/newspaper layout + kanban
+│       └── prose.css           post reading view
+├── scripts/sync-from-vault.sh  Vault → content/posts (tag-based)
 ├── .github/workflows/deploy.yml
 ├── astro.config.mjs
 └── REFACTOR_PLAN.md
 ```
 
+---
+
+## Home page layout
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  HANBIN (topbar with Archive · About · Contact)           │
+│                                                           │
+│  ┌──────────── Hero ────────────┐                         │
+│  │  Latest post as cover story  │                         │
+│  └──────────────────────────────┘                         │
+│                                                           │
+│  § 01  Projects Board  (kanban — primary view)           │
+│    ┌──────────┐ ┌──────────┐ ┌──────────┐                │
+│    │ project1 │ │ project2 │ │ project3 │  ← columns     │
+│    │  card    │ │  card    │ │  card    │                │
+│    │  card    │ │  card    │ │          │  ← chrono ↓    │
+│    │  +3 more │ │          │ │          │                │
+│    └──────────┘ └──────────┘ └──────────┘                │
+│                                                           │
+│  § 02  The Archive  (timeline preview)                   │
+│    № 009 · 2026.04.24 · 도구가 나의...                     │
+│    № 008 · 2026.04.18 · 작은 스프레드시트...               │
+│    ... [전체 보기 →]                                      │
+└──────────────────────────────────────────────────────────┘
+```
+
+Two orthogonal views of the same corpus — project (kanban) × time
+(timeline). The archive page offers a project-filter too, so
+`/archive?tag=slam-research` deep-links filtered views.
+
+---
+
 ## Writing a new post
 
-Two ways:
+**Two paths, same contract.**
 
-### 1. Directly in this repo
+### Path A — From Obsidian (recommended)
+
+1. Insert the template at `obsidian-templates/post.md` (or copy it to
+   your Obsidian templates folder).
+2. Fill the frontmatter; **set `publish: true`** when ready to publish.
+3. In the repo:
+
+```bash
+npm run sync        # Vault → content/posts, filtered by `publish: true`
+npm run dev         # preview at http://localhost:4321
+# or
+npm run sync:dev    # sync + dev in one step
+```
+
+Read `obsidian-templates/README.md` for the full authoring guide —
+frontmatter fields, tag/project convention, image handling, KaTeX gotchas.
+
+### Path B — Directly in this repo
 
 Create `content/posts/YYYY-MM-DD-slug.md`:
 
 ```md
 ---
 title: "제목"
+date: 2026-05-01
 dek: "부제"
 category: "Essay"
-date: 2026-05-01
-issue: 5
 readtime: "6분 분량"
-tags: [foo, bar]
+tags: [project-name]
 draft: false
+publish: true
 ---
 
-본문. **마크다운**과 $LaTeX$ 수식 전부 지원됩니다.
-
-$$
-E = mc^2
-$$
+본문. **마크다운**과 $LaTeX$ 수식 전부 지원.
 ```
 
-### 2. From your Obsidian vault
+### Publish model
 
-Write in the vault's public folders (`60_Writing/64_Blog`, `20_Concepts`,
-`40_Projects/44_Public`). Then from this repo:
+Publishing is a **single boolean** at the note level, not a folder move:
 
-```bash
-npm run sync      # mirrors vault → content/
-npm run dev       # preview at http://localhost:4321
-# or
-npm run sync:dev  # both in one command
+| frontmatter                      | result                                              |
+|----------------------------------|-----------------------------------------------------|
+| `publish: false`                 | stays in vault only                                 |
+| `publish: true` + `draft: false` | synced to site on next `npm run sync`               |
+| `publish: true` + `draft: true`  | sync skips it (draft override)                      |
+
+Vault organization (daily notes, research, drafts) is independent of
+what's public.
+
+### Project model
+
+Project = first tag. Example:
+
+```yaml
+tags: [slam-research]                  # kanban column: slam-research
+tags: [slam-research, kalman-study]    # column: slam-research, archive filters match both
+tags: []                               # column: (unclassified)
 ```
 
-Drafts (`draft: true`) are stripped automatically during sync.
+Kanban caps each column at **5 cards** — overflow becomes
+`+N more in this project →` linking to `/archive?tag=slam-research` with
+the filter pre-activated.
+
+---
 
 ## Local development
 
 ```bash
 npm install
-npm run dev
+npm run dev         # http://localhost:4321
+npm run build       # produces dist/
+npm run preview     # serve dist/ locally
 ```
 
 ## Deployment
@@ -88,16 +155,19 @@ npm run dev
 
 ## Math
 
-Rendered with **KaTeX** via `remark-math` + `rehype-katex`. MathJax syntax
-is largely compatible. A few caveats:
+Rendered with **KaTeX** via `remark-math` + `rehype-katex`. MathJax
+syntax is largely compatible:
 
-- `\label` / `\ref` are limited — use `\tag{}` for numbered equations.
-- `\require{AMS}` can be deleted (AMS is built-in).
-- Add custom macros in `astro.config.mjs` under `rehypeKatex > macros`.
+- `$inline$`, `$$block$$`, `\begin{align}` — identical.
+- `\label` / `\ref` — limited; use `\tag{}` for numbered equations.
+- `\require{AMS}` — unnecessary; AMS is built-in.
+- Shared macros (e.g. `\RR`, `\NN`, `\ZZ`) live in `astro.config.mjs`
+  under `rehypeKatex > macros`.
 
 ## Colors
 
-Design tokens in `src/styles/tokens.css` use the official **CAU** palette:
+Design tokens in `src/styles/tokens.css` follow the official **CAU**
+palette:
 
 | Token              | Hex       | Pantone  |
 |--------------------|-----------|----------|
@@ -107,3 +177,30 @@ Design tokens in `src/styles/tokens.css` use the official **CAU** palette:
 | `--cau-light-gray` | `#E6E6E6` | 427  C   |
 | `--cau-silver`     | `#8A8D8F` | 877  C   |
 | `--cau-gold`       | `#B08D57` | 873  C   |
+
+`--accent` (primary link / footer / section numbers) = `--cau-blue`.
+
+---
+
+## Scaling roadmap
+
+As the site grows, enable these in order:
+
+- **Tier 1 (now)** — kanban card cap + archive deep-link filter.
+  Already implemented.
+- **Tier 2 (10+ projects)** — activate `ACTIVITY_WINDOW_DAYS` in
+  `src/pages/index.astro` to fold dormant projects into an accordion;
+  add `pinned: true` frontmatter override.
+- **Tier 3 (20+ projects)** — generate `/projects/[tag]` per-project
+  pages; switch kanban to horizontal scroll with snap points.
+
+## Harmless leftovers
+
+Safe to delete when convenient (not required):
+
+- `index.legacy.html` — original single-file site for comparison.
+- `src/components/Longform.astro` — orphan after Longform section removal.
+- `src/components/ArticleCard.astro` — orphan after kanban migration;
+  kept as potential scaffold for future tag pages.
+- `.grid-3` / `.article` CSS rules in `newsprint.css` — paired with
+  ArticleCard above.

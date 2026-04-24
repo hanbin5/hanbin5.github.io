@@ -1,93 +1,90 @@
 #!/usr/bin/env bash
-# sync-from-vault.sh
+# sync-from-vault.sh — tag-based publishing from Obsidian vault.
 # ----------------------------------------------------------------------
-# Mirror the "public" subtrees of the Obsidian vault into this repo's
-# content/ directory, so Astro can build from them.
+# Walks the entire vault and copies any .md note whose frontmatter has
+#     publish: true
+# into this repo's content/posts/. Notes with `draft: true` are skipped
+# even if publish is on, so drafts never leak.
 #
-# Rules:
-#   - Vault is the source of truth for synced folders.
-#   - Anything authored directly in repo at content/repo-only/ is preserved.
-#   - Files with `draft: true` in frontmatter are stripped before build.
+# Why this model instead of mapping specific folders?
+#   - Vault organization (daily notes, research, archive) becomes
+#     independent of what's public — move notes freely without breaking
+#     publication.
+#   - Publishing is a single-bit decision at the note level.
+#   - Unpublishing is symmetric: flip the flag, re-run sync.
+#
+# Attachments:
+#   Images referenced via ![[...]] (Obsidian wiki embed) are NOT auto-
+#   copied — see obsidian-templates/README.md for the recommended
+#   /attachments/ workflow.
 # ----------------------------------------------------------------------
 
 set -euo pipefail
 
 VAULT="${VAULT:-$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/Workspace}"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-CONTENT="$REPO_ROOT/content"
+POSTS_DIR="$REPO_ROOT/content/posts"
+REPO_ONLY="$REPO_ROOT/content/repo-only"
 
-# (vault-subpath) : (content-subfolder)
-PUBLISH_MAP=(
-  "60_Writing/64_Blog:posts"
-  "20_Concepts:concepts"
-  "40_Projects/44_Public:projects"
-  "06_Public_Attachments:attachments"
-)
-
-# Folders that are managed in the repo itself — never touched by sync.
-PRESERVE_DIRS=(
-  "repo-only"
-)
-
-echo "📁 repo: $REPO_ROOT"
+echo "📁 repo:  $REPO_ROOT"
 echo "📁 vault: $VAULT"
 if [ ! -d "$VAULT" ]; then
   echo "❌ Vault path not found. Set the VAULT env var or fix the default in the script."
   exit 1
 fi
 
-# Back up preserve dirs, wipe non-preserved content, restore.
-TMP=$(mktemp -d)
-for d in "${PRESERVE_DIRS[@]}"; do
-  if [ -d "$CONTENT/$d" ]; then
-    cp -R "$CONTENT/$d" "$TMP/"
-  fi
-done
+# Fresh slate for synced posts; never touch repo-only or other folders.
+rm -rf "$POSTS_DIR"
+mkdir -p "$POSTS_DIR"
 
-# Remove synced subfolders only; leave preserved ones alone.
-for mapping in "${PUBLISH_MAP[@]}"; do
-  dst="${mapping##*:}"
-  rm -rf "$CONTENT/$dst"
-done
+published=0
+skipped_draft=0
 
-# Fresh sync from vault.
-for mapping in "${PUBLISH_MAP[@]}"; do
-  src="${mapping%%:*}"
-  dst="${mapping##*:}"
-  if [ -d "$VAULT/$src" ]; then
-    echo "📂 $src → content/$dst"
-    mkdir -p "$CONTENT/$dst"
-    rsync -av --delete \
-      --exclude='.obsidian' \
-      --exclude='.trash' \
-      --exclude='*.canvas' \
-      --exclude='templates' \
-      --exclude='.DS_Store' \
-      "$VAULT/$src/" "$CONTENT/$dst/" > /dev/null
-  else
-    echo "⚠️  $VAULT/$src not found — skipping."
-  fi
-done
-
-# Restore preserved dirs (repo-only content).
-for d in "${PRESERVE_DIRS[@]}"; do
-  if [ -d "$TMP/$d" ]; then
-    rm -rf "$CONTENT/$d"
-    mv "$TMP/$d" "$CONTENT/$d"
-  fi
-done
-rm -rf "$TMP"
-
-# Strip drafts: any .md with `draft: true` in the first 25 frontmatter lines.
-echo "🔍 filtering drafts…"
-draft_count=0
+# Scan the vault. Skip obvious noise directories.
 while IFS= read -r -d '' file; do
-  if head -25 "$file" | grep -qE '^draft:[[:space:]]*true[[:space:]]*$'; then
-    echo "  ✂️  ${file#$CONTENT/}"
-    rm "$file"
-    draft_count=$((draft_count + 1))
-  fi
-done < <(find "$CONTENT" -type f -name '*.md' -print0)
-echo "🔍 $draft_count draft(s) removed."
+  # Read only the frontmatter region (safely capped at 40 lines).
+  head="$(head -40 "$file")"
 
-echo "✅ Vault sync complete."
+  # Must have `publish: true`. Grep with anchors so `publish: false` or
+  # `publish-later: true` don't match by accident.
+  if ! printf '%s\n' "$head" | grep -qE '^publish:[[:space:]]*true[[:space:]]*$'; then
+    continue
+  fi
+
+  # Respect an explicit `draft: true` — never publish drafts.
+  if printf '%s\n' "$head" | grep -qE '^draft:[[:space:]]*true[[:space:]]*$'; then
+    skipped_draft=$((skipped_draft + 1))
+    echo "  ⏸  draft:  $(basename "$file")"
+    continue
+  fi
+
+  # Slug = filename stem, normalized (spaces → hyphens, keep unicode).
+  slug="$(basename "$file" .md | tr ' ' '-')"
+  target="$POSTS_DIR/$slug.md"
+
+  # If two vault notes collide on slug, suffix with a counter.
+  if [ -e "$target" ]; then
+    n=2
+    while [ -e "$POSTS_DIR/${slug}-$n.md" ]; do
+      n=$((n + 1))
+    done
+    target="$POSTS_DIR/${slug}-$n.md"
+  fi
+
+  cp "$file" "$target"
+  echo "  ✅ publish: $(basename "$target")"
+  published=$((published + 1))
+done < <(
+  find "$VAULT" \
+    \( -name '.obsidian' -o -name '.trash' -o -name 'templates' \
+       -o -name '.git'  -o -name 'node_modules' \) -prune -o \
+    -type f -name '*.md' -print0
+)
+
+echo ""
+echo "─────────────────────────────────────────────────────────────"
+echo "✅ Published $published note(s). Skipped $skipped_draft draft(s)."
+if [ -d "$REPO_ONLY" ]; then
+  n=$(find "$REPO_ONLY" -type f -name '*.md' | wc -l | tr -d ' ')
+  echo "🔒 Preserved $n repo-only note(s) (not touched by sync)."
+fi
