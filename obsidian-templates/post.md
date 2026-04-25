@@ -20,9 +20,10 @@ readtime: ""               # "8분 분량" 같은 문자열. 비우면 카드에
 tags:
   - project-tag-here
 
-# Sync flags — sync-from-vault.sh가 이 두 줄로 공개 여부를 판단.
+# Sync flag — sync-from-vault.sh가 이 한 줄로 공개 여부를 판단.
 publish: false             # ← 공개 준비 끝나면 true 로.
-draft: false               # ← true 면 publish:true여도 스킵됨 (안전장치).
+# draft: true              # ← 필요할 때만 추가. 발행을 막는 안전장치.
+                           #    (없거나 비워두거나 false면 발행 대상.)
 
 # Optional.
 issue: 4                   # Vol. II · No. XX 표기용. 없으면 masthead 기본값 사용.
@@ -53,9 +54,10 @@ def residual(z, x_pred, H):
 
 - 이미지: Obsidian의 `![[file.png]]` wiki embed 그대로 써도 됨 — sync 시
   자동으로 표준 마크다운으로 변환되고 파일은 `public/attachments/`로 복사.
-  단 이미지는 vault의 **`06_Public_Attachments/`**에 있어야 함 (05_*는
-  비공개 영역, sync가 안 봄). 외부 CDN URL을 직접 박는 것도 OK —
-  `![alt](https://...)` 형태는 sync가 건드리지 않음.
+  단 이미지는 vault의 **`_Attachments/`**에 있어야 함. 폴더 단위 비공개
+  분리는 없으므로, 안 올리고 싶은 이미지는 published 노트에서 참조하지
+  말 것. 외부 CDN URL을 직접 박는 것도 OK — `![alt](https://...)` 형태는
+  sync가 건드리지 않음.
 - 링크: Obsidian wiki link `[[다른 노트]]` / `[[다른 노트|별칭]]` 그대로
   사용 가능 — sync가 published된 다른 노트로 자동 해석함. 비공개/없는
   노트로 링크하면 본문에 그대로 남아 사이트에서 가시적 깨짐으로 노출됨.

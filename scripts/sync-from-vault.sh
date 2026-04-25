@@ -3,11 +3,18 @@
 # ----------------------------------------------------------------------
 # Walks the entire vault and copies any .md note whose frontmatter has
 #     publish: true
-#     draft:   false   (must be EXPLICITLY present)
-# into this repo's content/posts/. A note with `draft: true` or with no
-# `draft` field at all is skipped, even if publish is on. Requiring an
-# explicit draft:false forces an opt-in: a fresh note doesn't leak just
-# because the user happened to flip publish on.
+# into this repo's content/posts/. A note is skipped only if it carries
+# an explicit `draft: true` — missing or empty `draft:` is treated as
+# "not draft" and the note is published.
+#
+# Why the lenient default? The vault's note creation flow (Templater,
+# weekly/daily templates) emits frontmatter blocks with `publish: false`
+# baked in but doesn't always write `draft: false`. Forcing an explicit
+# `draft: false` opt-in would silently drop any note where the author
+# flipped publish to true without also adding the draft line — exactly
+# the case `Markov Process.md` falls into. The single safety bit is
+# `publish: true`; once that's set, the author has explicitly said this
+# is for the public.
 #
 # Why this model instead of mapping specific folders?
 #   - Vault organization (daily notes, research, archive) becomes
@@ -20,14 +27,17 @@
 #   For each published note we scan the body for Obsidian wiki-embed
 #   image references — `![[file.png]]`, `![[path/file.png|alt]]`, etc.
 #   For each reference we look up the file by basename inside
-#   $VAULT/06_Public_Attachments/ and copy it to $REPO/public/attachments/.
+#   $VAULT/_Attachments/ and copy it to $REPO/public/attachments/.
 #   The reference in the synced .md is rewritten to standard markdown so
 #   Astro renders it (it doesn't understand the wiki syntax).
 #
-#   - Images dropped in 05_Attachments/ stay private. The folder split
-#     enforces a publish gate symmetric to publish:true on notes.
+#   - The vault uses a single `_Attachments/` folder (Obsidian default-ish
+#     naming). There is no public/private split at the folder level —
+#     anything referenced from a published note ships. If you need
+#     to keep an image private, don't reference it from a `publish: true`
+#     note.
 #   - The repo only grows by what's actually displayed on the site —
-#     unused images in 06_Public_Attachments/ never make it to git.
+#     unused images in `_Attachments/` never make it to git.
 #   - Currently handles images only (.png/.jpg/.jpeg/.gif/.svg/.webp).
 #     PDFs / videos can be added later by extending IMG_EXT.
 #
@@ -58,8 +68,9 @@ VAULT="${VAULT:-$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/Work
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 POSTS_DIR="$REPO_ROOT/content/posts"
 REPO_ONLY="$REPO_ROOT/content/repo-only"
-ATTACHMENTS_VAULT="${ATTACHMENTS_VAULT:-$VAULT/06_Public_Attachments}"
-PRIVATE_ATTACHMENTS_VAULT="${PRIVATE_ATTACHMENTS_VAULT:-$VAULT/05_Attachments}"
+# Single attachments folder — vault has no public/private split. Override
+# with the ATTACHMENTS_VAULT env var if you reorganize.
+ATTACHMENTS_VAULT="${ATTACHMENTS_VAULT:-$VAULT/_Attachments}"
 ATTACHMENTS_DIR="$REPO_ROOT/public/attachments"
 
 # Image extensions the embed scanner recognises. Keep as a single
@@ -82,7 +93,6 @@ fi
 
 published=0
 skipped_draft=0
-skipped_nodraft=0
 attached=0
 missing=0
 unpublished_link=0
@@ -109,9 +119,9 @@ trap 'rm -f "$SLUG_MAP" "$PUBLISHABLE" "$STEM_OWNERS"' EXIT
 #   left in the body as-is — the build will simply show a broken image
 #   placeholder, which is the right loud failure.
 #
-#   We deliberately do NOT search 05_Attachments/ — that's the privacy
-#   gate. To publish an image you must move it (or symlink it) into
-#   06_Public_Attachments/.
+#   No privacy gate at the folder level: the only thing keeping an image
+#   off the site is "no published note references it". If you want
+#   something private, don't embed it in a `publish: true` note.
 process_attachments() {
   local target="$1"
 
@@ -280,17 +290,11 @@ while IFS= read -r -d '' file; do
     continue
   fi
 
-  # draft: true → skip (loud).
+  # draft: true → skip (loud). Missing or empty `draft:` is treated as
+  # "not a draft" — see header for the rationale.
   if printf '%s\n' "$head" | grep -qE '^draft:[[:space:]]*true[[:space:]]*$'; then
     skipped_draft=$((skipped_draft + 1))
     echo "  ⏸  draft:    $(basename "$file")"
-    continue
-  fi
-
-  # draft missing → skip (also loud — explicit opt-in required).
-  if ! printf '%s\n' "$head" | grep -qE '^draft:[[:space:]]*false[[:space:]]*$'; then
-    skipped_nodraft=$((skipped_nodraft + 1))
-    echo "  ⏸  no-draft: $(basename "$file")"
     continue
   fi
 
@@ -317,9 +321,10 @@ while IFS= read -r -d '' file; do
   printf '%s\t%s\n' "$lc_stem" "$file" >> "$STEM_OWNERS"
 done < <(
   find "$VAULT" \
-    \( -name '.obsidian' -o -name '.trash' -o -name 'templates' \
+    \( -name '.obsidian' -o -name '.trash' \
+       -o -name 'templates' -o -name '_Templates' \
        -o -name '.git'  -o -name 'node_modules' \
-       -o -path "$ATTACHMENTS_VAULT" -o -path "$PRIVATE_ATTACHMENTS_VAULT" \) -prune -o \
+       -o -path "$ATTACHMENTS_VAULT" \) -prune -o \
     -type f -name '*.md' -print0
 )
 
@@ -391,7 +396,7 @@ done < "$PUBLISHABLE"
 echo ""
 echo "─────────────────────────────────────────────────────────────"
 echo "✅ Published $published note(s)."
-echo "   Skipped: $skipped_draft draft, $skipped_nodraft no-draft-field."
+echo "   Skipped: $skipped_draft draft."
 echo "📎 Attachments: $attached copied, $missing missing reference(s)."
 echo "🔗 Cross-links: $unpublished_link unpublished target(s) left intact."
 if [ -d "$REPO_ONLY" ]; then

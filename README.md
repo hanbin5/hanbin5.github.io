@@ -94,10 +94,10 @@ title: "제목"
 date: 2026-05-01
 dek: "부제"
 category: "Essay"        # one of: Essay | Note | Log | Review (default: Essay)
+                         # `type:` is also accepted as an alias.
 readtime: "6분 분량"
 tags: [project-name]
-draft: false
-publish: true
+publish: true            # `draft: true`만 발행을 막음. draft 줄이 없거나 비어 있으면 발행됨.
 ---
 
 본문. **마크다운**과 $LaTeX$ 수식 전부 지원.
@@ -105,17 +105,19 @@ publish: true
 
 ### Publish model
 
-Publishing is gated by **two booleans** at the note level, not a folder move:
+Publishing is gated at the note level, not by folder:
 
-| frontmatter                      | result                                                      |
-|----------------------------------|-------------------------------------------------------------|
-| `publish: false` (or missing)    | stays in vault only                                         |
-| `publish: true` + `draft: false` | synced to site on next `npm run sync`                       |
-| `publish: true` + `draft: true`  | sync skips it (draft override)                              |
-| `publish: true` + draft missing  | sync skips it — explicit `draft: false` is required opt-in  |
+| frontmatter                              | result                                |
+|------------------------------------------|---------------------------------------|
+| `publish: false` (or missing)            | stays in vault only                   |
+| `publish: true` + no `draft:` line       | synced to site on next `npm run sync` |
+| `publish: true` + `draft: false`         | synced to site on next `npm run sync` |
+| `publish: true` + `draft:` (empty value) | synced to site on next `npm run sync` |
+| `publish: true` + `draft: true`          | sync skips it (draft override)        |
 
-Vault organization (daily notes, research, drafts) is independent of
-what's public.
+Single safety bit: `publish: true`. Setting `draft: true` is the only
+thing that pulls a publish-flagged note back. Vault organization (daily
+notes, research, drafts) is independent of what's public.
 
 ### Project model (tags)
 
