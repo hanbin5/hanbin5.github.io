@@ -31,17 +31,40 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Guard against shipping bracket-style placeholders like "[학과명]"
-      # or "[프로젝트…]" into production. The pattern excludes Astro's
-      # own rest-param syntax `[...slug]` so dynamic-route filenames
-      # don't trip the check. Cheap, runs offline, fails the deploy
-      # *before* a half-filled draft can leak.
+      # Guard against shipping bracket-style human placeholders like
+      # "[학과명]" or "[2~3문단짜리 자기소개...]" into production. We can't
+      # just match every `[…]` — the codebase legitimately uses brackets
+      # for JS array spread (`[...foo]`), destructuring (`[tag, items]`),
+      # CSS attribute selectors (`[data-filter-axis="tag"]`), regex
+      # character classes, and `dataset[key]` access. So we only flag a
+      # bracketed string if its inner text contains a Korean (Hangul)
+      # character or an explicit ○○○ / TODO / FIXME marker — those are
+      # the shapes a human draft placeholder actually takes here.
+      #
+      # Runs offline (no npm), fails the deploy *before* a half-filled
+      # draft can leak.
       - name: Check for unfilled placeholders
         run: |
-          if grep -RnE '\[[^]]{2,}\]' src/pages src/components src/layouts \
-              --include='*.astro' --include='*.md' \
-              | grep -vE '\[\.\.\.[a-zA-Z_]+\]' ; then
-            echo "::error::Unfilled [bracket] placeholders found above. Fix them before deploying."
+          set -euo pipefail
+          mapfile -t files < <(
+            find src/pages src/components src/layouts \
+              -type f \( -name '*.astro' -o -name '*.md' \)
+          )
+          # `-CSD` decodes stdin/streams as UTF-8 so the Hangul range
+          # `[\x{AC00}-\x{D7A3}]` actually matches Korean characters in
+          # the source. Without it, perl sees raw bytes and the test
+          # silently never fires.
+          report=$(perl -CSD -nle '
+            while (m{\[([^\]]*)\]}g) {
+              my $inner = $1;
+              if ($inner =~ /[\x{AC00}-\x{D7A3}]/ || $inner =~ /○○○|TODO|FIXME/) {
+                print "$ARGV:$.: [$inner]";
+              }
+            }
+          ' "${files[@]}")
+          if [ -n "$report" ]; then
+            echo "$report"
+            echo "::error::Unfilled placeholders found above. Fix them before deploying."
             exit 1
           fi
 
