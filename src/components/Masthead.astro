@@ -2,7 +2,14 @@
 /**
  * Masthead — the giant "HANBIN" nameplate, with motto on the left and
  * issue number / founding info on the right.
+ *
+ * `issue` and `essayCount` are intentionally undefined-by-default. An
+ * empty journal should read as empty, not as a fake "Vol. II · No. 04
+ * — 12 Essays." The caller passes the real numbers; if it doesn't, we
+ * just omit those lines rather than lie.
  */
+import { plural } from "../lib/posts";
+
 export interface Props {
   motto?: string;
   issue?: string;
@@ -11,9 +18,9 @@ export interface Props {
 }
 const {
   motto = "A quiet journal on\ntools, attention,\nand making things.",
-  issue = "Vol. II · No. 04",
+  issue,
   since = "Est. 2024",
-  essayCount = 12,
+  essayCount,
 } = Astro.props;
 ---
 <div class="masthead">
@@ -21,9 +28,9 @@ const {
     <div class="motto" set:html={motto.replace(/\n/g, "<br/>")} />
     <h1><a href="/">HANBIN</a></h1>
     <div class="issue">
-      <strong>{issue}</strong>
+      {issue && <strong>{issue}</strong>}
       {since}<br/>
-      {essayCount} Essays to Date
+      {typeof essayCount === "number" && plural(essayCount, "Essay") + " to Date"}
     </div>
   </div>
 </div>

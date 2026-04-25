@@ -47,7 +47,17 @@ const post = defineCollection({
     cover:    z.string().optional(),
     draft:    z.boolean().default(false),
     publish:  z.boolean().optional(),           // sync gate only; ignored at build
-    tags:     z.array(z.string()).default([]),
+    // Tags double as DOM data attributes for the archive's client-side
+    // filter. We forbid commas in tag strings so join/split round trips
+    // stay safe. (We also serialize as JSON in the markup, but
+    // belt-and-braces — schema-level rejection surfaces the typo at
+    // build time, before it ever reaches a page.)
+    tags:     z.array(
+                z.string().refine(
+                  (t) => !t.includes(","),
+                  { message: "Tags must not contain commas." },
+                ),
+              ).default([]),
   }),
 });
 

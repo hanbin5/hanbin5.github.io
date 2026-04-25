@@ -31,6 +31,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Guard against shipping bracket-style placeholders like "[학과명]"
+      # or "[프로젝트…]" into production. The pattern excludes Astro's
+      # own rest-param syntax `[...slug]` so dynamic-route filenames
+      # don't trip the check. Cheap, runs offline, fails the deploy
+      # *before* a half-filled draft can leak.
+      - name: Check for unfilled placeholders
+        run: |
+          if grep -RnE '\[[^]]{2,}\]' src/pages src/components src/layouts \
+              --include='*.astro' --include='*.md' \
+              | grep -vE '\[\.\.\.[a-zA-Z_]+\]' ; then
+            echo "::error::Unfilled [bracket] placeholders found above. Fix them before deploying."
+            exit 1
+          fi
+
       - name: Build Astro site
         run: npm run build
 

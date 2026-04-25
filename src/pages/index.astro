@@ -2,7 +2,7 @@
 import JournalLayout from "../layouts/JournalLayout.astro";
 import HeroStory from "../components/HeroStory.astro";
 import EditorBand from "../components/EditorBand.astro";
-import { getPublishedPosts, longDate, postHref } from "../lib/posts";
+import { getPublishedPosts, longDate, postHref, plural } from "../lib/posts";
 import type { Post } from "../lib/posts";
 
 /**
@@ -56,9 +56,13 @@ const projects = [...projectMap.entries()]
   })
   .map(([tag, items]) => ({ tag, posts: items }));
 
+// `issue` is shown on the masthead only when the cover story carries
+// one in its frontmatter. Empty journals don't get a fake "Vol. II ·
+// No. 04" — Masthead renders nothing for that line if `issue` is
+// undefined, which reads as honest rather than as a stub.
 const issueLabel = hero?.data.issue
   ? `Vol. II · No. ${String(hero.data.issue).padStart(2, "0")}`
-  : "Vol. II · No. 04";
+  : undefined;
 ---
 <JournalLayout
   title="HANBIN — A Journal"
@@ -70,8 +74,8 @@ const issueLabel = hero?.data.issue
     <HeroStory
       category={hero.data.category.toUpperCase()}
       headline={hero.data.title}
-      deck={hero.data.dek ?? ""}
-      readTime={hero.data.readtime ?? ""}
+      deck={hero.data.dek}
+      readTime={hero.data.readtime}
       date={hero.data.date.toISOString().slice(0, 10).replace(/-/g, ".")}
       href={postHref(hero)}
     />
@@ -85,7 +89,7 @@ const issueLabel = hero?.data.issue
       <div class="section-head">
         <h2><span class="num">§ 01</span>Projects Board</h2>
         <div class="rule"></div>
-        <div class="count">{projects.length} projects · {totalPosts} entries</div>
+        <div class="count">{plural(projects.length, "project")} · {plural(totalPosts, "entry", "entries")}</div>
       </div>
 
       <div class="kanban-board">
@@ -106,7 +110,7 @@ const issueLabel = hero?.data.issue
                   {p.data.dek && <p class="card-dek">{p.data.dek}</p>}
                   <div class="card-foot">
                     <span class="card-cat">{p.data.category}</span>
-                    <span class="card-read">{p.data.readtime ?? ""}</span>
+                    {p.data.readtime && <span class="card-read">{p.data.readtime}</span>}
                   </div>
                 </a>
               ))}
@@ -136,12 +140,12 @@ const issueLabel = hero?.data.issue
 
       <div class="archive-list">
         {posts.slice(0, 8).map((p) => (
-          <a class="archive-row" href={postHref(p)} data-tags={p.data.tags.join(",")}>
+          <a class="archive-row" href={postHref(p)} data-tags={JSON.stringify(p.data.tags)}>
             <span class="idx">№ {String(rankById.get(p.id) ?? 0).padStart(3, "0")}</span>
             <span class="date">{p.data.date.toISOString().slice(0, 10).replace(/-/g, ".")}</span>
             <span class="title" set:html={p.data.title}></span>
             <span class="cat">{p.data.category}</span>
-            <span class="read">{p.data.readtime ?? ""}</span>
+            <span class="read">{p.data.readtime ?? ""}</span><!-- empty span keeps the grid columns aligned -->
           </a>
         ))}
       </div>

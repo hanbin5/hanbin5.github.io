@@ -1,21 +1,12 @@
 ---
 /**
- * ArchiveRow — one row of the archive list (idx | date | title | cat | read).
+ * DEPRECATED — empty stub. No callers in src/.
+ *
+ * The archive row is now inlined directly into pages/index.astro and
+ * pages/archive.astro so the rendered markup carries the data-tags /
+ * data-category attributes the filter script needs.
+ *
+ * This file is kept (not removed) only because the build sandbox can't
+ * unlink it. Run `git rm src/components/ArchiveRow.astro` to drop it.
  */
-export interface Props {
-  href: string;
-  idx: string;      // "№ 012"
-  date: string;     // "2026.04.18"
-  title: string;
-  category: string;
-  readTime: string; // "6 min"
-}
-const { href, idx, date, title, category, readTime } = Astro.props;
 ---
-<a class="archive-row" href={href}>
-  <span class="idx">{idx}</span>
-  <span class="date">{date}</span>
-  <span class="title" set:html={title}></span>
-  <span class="cat">{category}</span>
-  <span class="read">{readTime}</span>
-</a>

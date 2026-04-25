@@ -17,6 +17,39 @@ body {
 }
 a { color: inherit; text-decoration: none; }
 
+/* Visible-on-focus skip link — invisible to mouse users, but the first
+   tab stop reveals it for keyboard / screen-reader users. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--accent);
+  color: var(--paper);
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  z-index: 1000;
+}
+.skip-link:focus {
+  left: 8px;
+  top: 8px;
+  outline: 2px solid var(--paper);
+  outline-offset: 2px;
+}
+
+/* Consistent focus ring for keyboard users. :focus-visible excludes
+   mouse clicks so the design stays clean for pointer users. */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+/* Utility — used by archive filter to hide rows without inline styles. */
+.is-hidden { display: none !important; }
+
 .container {
   max-width: var(--container-max);
   margin: 0 auto;
@@ -279,168 +312,10 @@ a { color: inherit; text-decoration: none; }
   color: var(--muted);
 }
 
-/* Three-column editorial grid */
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  border-top: 1px solid var(--line-soft);
-}
-.grid-3 .article {
-  padding: 32px 24px;
-  border-bottom: 1px solid var(--line-soft);
-  border-right: 1px solid var(--line-soft);
-  cursor: pointer;
-  transition: background .2s;
-  position: relative;
-  display: block;
-  color: inherit;
-}
-.grid-3 .article:nth-child(3n) { border-right: none; }
-.grid-3 .article:hover { background: var(--highlight); }
-.grid-3 .article:hover .art-title { color: var(--accent); }
-.grid-3 .article:first-child { padding-left: 0; }
-.grid-3 .article:nth-child(3n) { padding-right: 0; }
-
-.art-meta {
-  display: flex; justify-content: space-between; align-items: center;
-  font-family: var(--mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  margin-bottom: 16px;
-}
-.art-meta .cat { color: var(--accent-bright); font-weight: 500; }
-/* Secondary category label below project tag — subtler, italic, muted.
-   Shown only when ArticleCard receives both `project` and `category`. */
-.art-sub-cat {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: -10px;
-  margin-bottom: 12px;
-}
-.art-number {
-  font-family: var(--serif);
-  font-size: 11px;
-  font-style: italic;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-.art-title {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: 26px;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  margin-bottom: 14px;
-  transition: color .2s;
-}
-.art-dek {
-  font-size: 14px;
-  line-height: 1.55;
-  color: var(--muted);
-  margin-bottom: 18px;
-}
-.art-read {
-  font-family: var(--mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--ink);
-}
-.art-read::after { content: " →"; color: var(--accent); }
-
-/* ============ TWO-COLUMN: FEATURE + DEPT ============ */
-.two-col {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 56px;
-  padding: 56px 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-.longform {
-  border-right: 1px solid var(--line-soft);
-  padding-right: 56px;
-}
-.longform .kicker {
-  font-family: var(--mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--accent-bright);
-  margin-bottom: 14px;
-}
-.longform h3 {
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: clamp(30px, 4vw, 44px);
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-  margin-bottom: 24px;
-}
-.longform p {
-  font-family: var(--serif);
-  font-size: 18px;
-  line-height: 1.65;
-  color: var(--ink);
-  margin-bottom: 18px;
-  font-weight: 300;
-}
-.longform p::first-letter {
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: 4.5em;
-  float: left;
-  line-height: 0.85;
-  padding: 6px 10px 0 0;
-  color: var(--accent);
-}
-.longform p + p::first-letter {
-  font-family: var(--serif);
-  font-weight: 300;
-  font-size: 1em;
-  float: none;
-  line-height: inherit;
-  padding: 0;
-  color: inherit;
-}
-
-.dept h4 {
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: 24px;
-  letter-spacing: -0.01em;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-  border-bottom: 2px solid var(--ink);
-}
-.dept-item {
-  padding: 18px 0;
-  border-bottom: 1px dotted var(--line-soft);
-  cursor: pointer;
-}
-.dept-item:last-child { border-bottom: none; }
-.dept-item:hover .d-title { color: var(--accent); }
-.d-date {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.d-title {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: 18px;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  transition: color .2s;
-}
+/* (Three-column .grid-3 / .article and the .two-col + .longform + .dept
+   feature blocks were removed when the home page migrated to the
+   kanban-only layout. Their components no longer exist; if a future
+   layout brings them back, restore from git history.) */
 
 /* ============ KANBAN BOARD (home: Projects × Time) ============ */
 .kanban-section {
@@ -621,6 +496,22 @@ a { color: inherit; text-decoration: none; }
 }
 .chip.active .count { color: rgba(255,255,255,0.72); }
 
+.filter-reset {
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 4px 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.filter-reset:hover { color: var(--accent); }
+
 .archive-empty {
   padding: 48px 0;
   text-align: center;
@@ -692,6 +583,8 @@ footer {
 }
 footer .container {
   display: grid;
+  /* Brand column gets the visual weight; the three link columns
+     (Sections / Elsewhere / Subscribe) sit narrower to its right. */
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 48px;
   padding-bottom: 48px;
@@ -749,10 +642,6 @@ footer ul a:hover { color: #fff; opacity: .85; }
   .masthead .motto, .masthead .issue { text-align: center; }
   .hero-story .container { grid-template-columns: 1fr; gap: 32px; }
   .band .container { grid-template-columns: 1fr; gap: 16px; }
-  .grid-3 { grid-template-columns: 1fr; }
-  .grid-3 .article { border-right: none !important; padding: 28px 0 !important; }
-  .two-col { grid-template-columns: 1fr; gap: 40px; }
-  .longform { border-right: none; padding-right: 0; padding-bottom: 32px; border-bottom: 1px solid var(--line-soft); }
   .archive-row {
     grid-template-columns: 40px 1fr;
     grid-template-rows: auto auto;

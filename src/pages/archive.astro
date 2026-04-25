@@ -1,6 +1,6 @@
 ---
 import JournalLayout from "../layouts/JournalLayout.astro";
-import { getPublishedPosts, longDate, postHref } from "../lib/posts";
+import { getPublishedPosts, longDate, postHref, plural } from "../lib/posts";
 import { CATEGORIES } from "../content/categories";
 
 const posts = await getPublishedPosts();
@@ -40,7 +40,7 @@ const categories = CATEGORIES.map((c) => ({
 <JournalLayout
   title="Archive — HANBIN"
   description="전체 아카이브 — published essays from HANBIN · A Journal."
-  issue={`All ${posts.length} Essays`}
+  issue={`All ${plural(posts.length, "Essay")}`}
   essayCount={posts.length}
 >
   <section class="archive" id="archive">
@@ -48,18 +48,18 @@ const categories = CATEGORIES.map((c) => ({
       <div class="section-head">
         <h2><span class="num">§</span>The Archive</h2>
         <div class="rule"></div>
-        <div class="count archive-count">{posts.length} entries</div>
+        <div class="count archive-count">{plural(posts.length, "entry", "entries")}</div>
       </div>
 
       {projects.length > 0 && (
         <div class="project-filter" id="project-filter">
-          <div class="filter-label">Filter by project</div>
-          <div class="chip-row" data-filter-axis="tag">
-            <button type="button" class="chip active" data-tag="">
+          <div class="filter-label" id="filter-project-label">Filter by project</div>
+          <div class="chip-row" role="group" aria-labelledby="filter-project-label" data-filter-axis="tag">
+            <button type="button" class="chip active" aria-pressed="true" data-tag="">
               All <span class="count">{posts.length}</span>
             </button>
             {projects.map(({ tag, count }) => (
-              <button type="button" class="chip" data-tag={tag}>
+              <button type="button" class="chip" aria-pressed="false" data-tag={tag}>
                 {tag} <span class="count">{count}</span>
               </button>
             ))}
@@ -68,17 +68,26 @@ const categories = CATEGORIES.map((c) => ({
       )}
 
       <div class="category-filter" id="category-filter">
-        <div class="filter-label">Filter by category</div>
-        <div class="chip-row" data-filter-axis="category">
-          <button type="button" class="chip active" data-category="">
+        <div class="filter-label" id="filter-category-label">Filter by category</div>
+        <div class="chip-row" role="group" aria-labelledby="filter-category-label" data-filter-axis="category">
+          <button type="button" class="chip active" aria-pressed="true" data-category="">
             All <span class="count">{posts.length}</span>
           </button>
           {categories.map(({ category, count }) => (
-            <button type="button" class="chip" data-category={category}>
+            <button type="button" class="chip" aria-pressed="false" data-category={category}>
               {category} <span class="count">{count}</span>
             </button>
           ))}
         </div>
+        {/*
+          Reset button — explicit "back to All / All" so users don't have
+          to click two chips to undo a deep-linked filter. Hidden by
+          default; the filter script reveals it whenever any axis is
+          active.
+        */}
+        <button type="button" id="filter-reset" class="filter-reset" hidden>
+          Reset filters
+        </button>
       </div>
 
       <div class="archive-list">
@@ -86,7 +95,7 @@ const categories = CATEGORIES.map((c) => ({
           <a
             class="archive-row"
             href={postHref(p)}
-            data-tags={p.data.tags.join(",")}
+            data-tags={JSON.stringify(p.data.tags)}
             data-category={p.data.category}
           >
             <span class="idx">№ {String(rankById.get(p.id) ?? 0).padStart(3, "0")}</span>
@@ -110,57 +119,87 @@ const categories = CATEGORIES.map((c) => ({
    * Client-side filter — two axes (Project + Category), AND-combined.
    * ------------------------------------------------------------------
    * Each archive row carries:
-   *   - data-tags="a,b,c"   (project membership; multiple)
+   *   - data-tags="[...]"   JSON-encoded array of project tags
    *   - data-category="..." (genre; exactly one)
    *
-   * State is one selected value per axis. Empty string = "All" on that
-   * axis. A row is shown only when BOTH axes match (AND). Each chip row
-   * is scoped by `data-filter-axis` so we can manage active state
-   * independently per axis.
+   * Why JSON for tags? The previous comma-joined form silently broke
+   * if a tag contained a comma. The schema now refuses commas in tags
+   * too, but JSON keeps the on-the-wire format unambiguous regardless.
    *
-   * Deep links: /archive?tag=slam-research&category=Note pre-applies
-   * both filters. Unknown values are ignored gracefully (case-insensitive
-   * match for tag; categories are matched case-insensitively too since
-   * the enum lookup tolerates it).
+   * State is one selected value per axis. Empty string = "All". A row
+   * shows only when BOTH axes match (AND).
+   *
+   * Deep links: `/archive?tag=…&category=…` pre-applies both filters.
+   * Chip clicks now also write back to the URL via history.replaceState
+   * so the address bar always reflects the visible state — sharable
+   * filter links without a navigation event.
    *
    * Pure vanilla JS — no framework, no hydration cost.
    */
   (() => {
+    type Chip = HTMLButtonElement;
+
     const rows = Array.from(document.querySelectorAll<HTMLElement>(".archive-row"));
     const counter = document.querySelector<HTMLElement>(".archive-count");
     const empty = document.querySelector<HTMLElement>("#archive-empty");
+    const reset = document.querySelector<HTMLButtonElement>("#filter-reset");
 
     const tagChips = Array.from(
-      document.querySelectorAll<HTMLButtonElement>('[data-filter-axis="tag"] .chip'),
+      document.querySelectorAll<Chip>('[data-filter-axis="tag"] .chip'),
     );
     const categoryChips = Array.from(
-      document.querySelectorAll<HTMLButtonElement>('[data-filter-axis="category"] .chip'),
+      document.querySelectorAll<Chip>('[data-filter-axis="category"] .chip'),
     );
+
+    // Pre-parse tag arrays once (vs every apply()). Bad JSON falls
+    // back to []; a malformed attribute shouldn't take down the page.
+    const rowTags = new Map<HTMLElement, string[]>();
+    rows.forEach((row) => {
+      try {
+        const parsed = JSON.parse(row.dataset.tags || "[]");
+        rowTags.set(row, Array.isArray(parsed) ? parsed : []);
+      } catch {
+        rowTags.set(row, []);
+      }
+    });
 
     let activeTag = "";
     let activeCategory = "";
 
-    function apply() {
+    function apply(updateUrl = true) {
       let visible = 0;
       rows.forEach((row) => {
-        const tags = (row.dataset.tags || "").split(",").filter(Boolean);
+        const tags = rowTags.get(row) || [];
         const category = row.dataset.category || "";
         const tagOk = !activeTag || tags.includes(activeTag);
         const catOk = !activeCategory || category === activeCategory;
         const show = tagOk && catOk;
-        row.style.display = show ? "" : "none";
+        row.classList.toggle("is-hidden", !show);
         if (show) visible++;
       });
       if (counter) {
         counter.textContent = `${visible} ${visible === 1 ? "entry" : "entries"}`;
       }
       if (empty) empty.hidden = visible !== 0;
-      tagChips.forEach((c) =>
-        c.classList.toggle("active", (c.dataset.tag || "") === activeTag),
-      );
-      categoryChips.forEach((c) =>
-        c.classList.toggle("active", (c.dataset.category || "") === activeCategory),
-      );
+
+      const setPressed = (chip: Chip, key: "tag" | "category", active: string) => {
+        const matches = (chip.dataset[key] || "") === active;
+        chip.classList.toggle("active", matches);
+        chip.setAttribute("aria-pressed", matches ? "true" : "false");
+      };
+      tagChips.forEach((c) => setPressed(c, "tag", activeTag));
+      categoryChips.forEach((c) => setPressed(c, "category", activeCategory));
+
+      if (reset) reset.hidden = !activeTag && !activeCategory;
+
+      if (updateUrl) {
+        const params = new URLSearchParams();
+        if (activeTag) params.set("tag", activeTag);
+        if (activeCategory) params.set("category", activeCategory);
+        const qs = params.toString();
+        const next = qs ? `?${qs}` : window.location.pathname;
+        history.replaceState(null, "", next);
+      }
     }
 
     tagChips.forEach((chip) => {
@@ -169,15 +208,21 @@ const categories = CATEGORIES.map((c) => ({
         apply();
       });
     });
-
     categoryChips.forEach((chip) => {
       chip.addEventListener("click", () => {
         activeCategory = chip.dataset.category || "";
         apply();
       });
     });
+    reset?.addEventListener("click", () => {
+      activeTag = "";
+      activeCategory = "";
+      apply();
+    });
 
-    // Deep link: read both URL params, find matching chips (case-insensitive).
+    // Deep link: read both URL params, find matching chips (case-
+    // insensitive lookup; the canonical value comes from the chip's
+    // dataset so capitalization stays consistent).
     const params = new URLSearchParams(window.location.search);
     const reqTag = (params.get("tag") || "").toLowerCase();
     const reqCat = (params.get("category") || "").toLowerCase();
@@ -194,12 +239,10 @@ const categories = CATEGORIES.map((c) => ({
       );
       if (match) activeCategory = match.dataset.category || "";
     }
-    if (activeTag || activeCategory) {
-      apply();
-      // Pull the filters into view without a hard jump.
-      document
-        .getElementById("project-filter")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    // Always apply once on load — populates aria-pressed and the
+    // counter from the canonical (possibly-empty) state. Skip the URL
+    // rewrite on this initial pass: if we landed here from a deep
+    // link we want to *honor* the URL, not echo it back.
+    apply(/* updateUrl */ false);
   })();
 </script>

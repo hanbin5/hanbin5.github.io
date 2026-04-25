@@ -7,7 +7,7 @@
 export interface Props {
   category?: string;
   headline: string;     // may contain <em>…</em>
-  deck: string;
+  deck?: string;        // optional — many notes ship without a dek
   author?: string;
   readTime?: string;    // e.g. "18분 분량"
   date?: string;        // e.g. "2026.04.24"
@@ -19,8 +19,8 @@ const {
   headline,
   deck,
   author = "한빈",
-  readTime = "",
-  date = "",
+  readTime,
+  date,
   href = "#",
   caption = "Photograph · Studio, April 2026",
 } = Astro.props;
@@ -36,10 +36,12 @@ const {
         <span>The Cover Story</span>
       </div>
       <h1 class="hero-headline"><a href={href} set:html={headline}></a></h1>
-      <p class="hero-deck">{deck}</p>
+      {deck && <p class="hero-deck">{deck}</p>}
       <div class="byline">
         <span class="author">Words by {author}</span>
-        <span>{readTime}{readTime && date ? " · " : ""}{date}</span>
+        {(readTime || date) && (
+          <span>{readTime}{readTime && date ? " · " : ""}{date}</span>
+        )}
       </div>
     </div>
   </div>

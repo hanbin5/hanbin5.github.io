@@ -3,9 +3,6 @@
 Personal CV-oriented journal, built with **Astro** and deployed to GitHub Pages.
 Obsidian vault → repo via tag-based publishing.
 
-> Legacy single-file site preserved as `index.legacy.html` until the
-> Astro build has been verified on production. Safe to delete after.
-
 ---
 
 ## What lives where
@@ -212,13 +209,3 @@ As the site grows, enable these in order:
 - **Tier 3 (20+ projects)** — generate `/projects/[tag]` per-project
   pages; switch kanban to horizontal scroll with snap points.
 
-## Harmless leftovers
-
-Safe to delete when convenient (not required):
-
-- `index.legacy.html` — original single-file site for comparison.
-- `src/components/Longform.astro` — orphan after Longform section removal.
-- `src/components/ArticleCard.astro` — orphan after kanban migration;
-  kept as potential scaffold for future tag pages.
-- `.grid-3` / `.article` CSS rules in `newsprint.css` — paired with
-  ArticleCard above.

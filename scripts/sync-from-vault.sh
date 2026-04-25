@@ -75,13 +75,10 @@ if [ ! -d "$VAULT" ]; then
   exit 1
 fi
 
-# Fresh slate for synced posts and attachments; never touch repo-only.
-# Both directories are entirely managed by sync — anything in them at
-# the top of the run is presumed stale.
-rm -rf "$POSTS_DIR"
-mkdir -p "$POSTS_DIR"
-rm -rf "$ATTACHMENTS_DIR"
-mkdir -p "$ATTACHMENTS_DIR"
+# NOTE: the destructive wipe of $POSTS_DIR / $ATTACHMENTS_DIR has moved
+# below the duplicate-stem gate (search for "Phase 1.5"). If we abort on
+# duplicates, the previous good output stays on disk so an accidental
+# `git push` afterwards doesn't deploy an empty site.
 
 published=0
 skipped_draft=0
@@ -92,10 +89,12 @@ unpublished_link=0
 
 # Working tempfiles. SLUG_MAP is the {filename_stem -> slug} table that
 # the link rewriter consults; PUBLISHABLE is the {vault_path -> slug}
-# work queue for phase 2.
+# work queue for phase 2; STEM_OWNERS records every {lc_stem -> path}
+# pair for the cross-folder duplicate-name check in Phase 1.5.
 SLUG_MAP=$(mktemp)
 PUBLISHABLE=$(mktemp)
-trap 'rm -f "$SLUG_MAP" "$PUBLISHABLE"' EXIT
+STEM_OWNERS=$(mktemp)
+trap 'rm -f "$SLUG_MAP" "$PUBLISHABLE" "$STEM_OWNERS"' EXIT
 
 # ---------- helpers ----------
 
@@ -311,6 +310,11 @@ while IFS= read -r -d '' file; do
 
   printf '%s\t%s\n' "$stem" "$slug" >> "$SLUG_MAP"
   printf '%s\t%s\n' "$file" "$slug" >> "$PUBLISHABLE"
+  # Track lowercased stem → vault path for the duplicate-name check.
+  # Lowercasing matches process_links's lookup key, so `Ideas.md` and
+  # `ideas.md` from different folders are treated as colliding too.
+  lc_stem="$(printf '%s' "$stem" | tr '[:upper:]' '[:lower:]')"
+  printf '%s\t%s\n' "$lc_stem" "$file" >> "$STEM_OWNERS"
 done < <(
   find "$VAULT" \
     \( -name '.obsidian' -o -name '.trash' -o -name 'templates' \
@@ -318,6 +322,58 @@ done < <(
        -o -path "$ATTACHMENTS_VAULT" -o -path "$PRIVATE_ATTACHMENTS_VAULT" \) -prune -o \
     -type f -name '*.md' -print0
 )
+
+# ---------- Phase 1.5: abort on cross-folder filename collisions ----------
+# Obsidian disambiguates `Projects/Ideas.md` and `Journal/Ideas.md` by
+# folder, but the blog flattens everything into /posts/<slug> where the
+# slug is derived from the filename only. The slug-collision loop above
+# handles the *file* side (second one becomes `ideas-2.md`), but
+# process_links uses a flat lc_stem→slug hash — so `[[Ideas]]` would
+# silently resolve to whichever Ideas.md `find` returned first. That
+# non-determinism is exactly the bug we want to refuse to commit.
+#
+# We accumulate all duplicates and report them in one pass so the user
+# can fix every collision in a single edit cycle, not one per re-run.
+dupe_report=$(sort "$STEM_OWNERS" | awk -F'\t' '
+  $1 == prev_key {
+    if (!printed) {
+      printf "\n  ❌ duplicate stem: \"%s\"\n", $1
+      printf "       - %s\n", prev_path
+      printed = 1
+    }
+    printf "       - %s\n", $2
+    next
+  }
+  {
+    prev_key = $1
+    prev_path = $2
+    printed = 0
+  }
+')
+
+if [ -n "$dupe_report" ]; then
+  echo ""
+  echo "─────────────────────────────────────────────────────────────"
+  echo "❌ Aborting sync: multiple publishable notes share the same filename."
+  echo ""
+  echo "   Obsidian distinguishes notes by folder + filename, but the blog"
+  echo "   flattens everything into /posts/<slug> where the slug comes from"
+  echo "   the filename alone. Wiki links like [[X]] would silently resolve"
+  echo "   to whichever copy the filesystem returned first — almost"
+  echo "   certainly not what you intended."
+  echo ""
+  echo "   Rename one of the colliding notes (or set publish:false on it)"
+  echo "   and re-run.  Nothing in content/posts/ has been modified."
+  echo "$dupe_report"
+  echo ""
+  exit 1
+fi
+
+# Gate passed — now it is safe to wipe and rebuild.
+rm -rf "$POSTS_DIR"
+mkdir -p "$POSTS_DIR"
+rm -rf "$ATTACHMENTS_DIR"
+mkdir -p "$ATTACHMENTS_DIR"
 
 # ---------- Phase 2: copy each publishable, then rewrite ----------
 # We copy first, then run process_attachments and process_links on the

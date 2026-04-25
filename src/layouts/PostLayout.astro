@@ -36,23 +36,26 @@ const plainTitle = title.replace(/<[^>]+>/g, "");
   <BaseHead title={`${plainTitle} — HANBIN`} description={description ?? dek} />
 </head>
 <body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
   <TopBar />
 
-  <div class="container">
-    <header class="post-header">
-      <div class="meta">
-        {category && <span class="cat">{category}</span>}
-        {displayDate && <span>{displayDate}</span>}
-        {readTime && <span>{readTime}</span>}
-      </div>
-      <h1 set:html={title}></h1>
-      {dek && <p class="dek">{dek}</p>}
-    </header>
+  <main id="main">
+    <div class="container">
+      <header class="post-header">
+        <div class="meta">
+          {category && <span class="cat">{category}</span>}
+          {displayDate && <span>{displayDate}</span>}
+          {readTime && <span>{readTime}</span>}
+        </div>
+        <h1 set:html={title}></h1>
+        {dek && <p class="dek">{dek}</p>}
+      </header>
 
-    <article class="prose">
-      <slot />
-    </article>
-  </div>
+      <article class="prose">
+        <slot />
+      </article>
+    </div>
+  </main>
 
   <Footer />
 </body>

@@ -1,15 +1,25 @@
 ---
-import { getCollection, render } from "astro:content";
+import { render } from "astro:content";
 import PostLayout from "../../layouts/PostLayout.astro";
+import { getPublishedPosts } from "../../lib/posts";
 
 /**
  * Dynamic post route. Every non-draft post in content/posts/ produces
- * a page at /posts/<its-folder-path>/<its-slug>.
+ * a page at /posts/<its-slug>/.
+ *
+ * We route through `getPublishedPosts` (instead of a fresh
+ * `getCollection` filter call) so that "what counts as published" is
+ * defined in exactly one place — `lib/posts.ts`. If we later need to
+ * exclude future-dated posts, gate by a `published-at` field, etc.,
+ * this page picks the change up automatically.
+ *
+ * Astro 4's contentLayer glob loader strips the `.md` from `id`, so
+ * `post.id` is already the bare slug. No regex stripping needed.
  */
 export async function getStaticPaths() {
-  const posts = await getCollection("post", ({ data }) => !data.draft);
+  const posts = await getPublishedPosts();
   return posts.map((post) => ({
-    params: { slug: post.id.replace(/\.md$/, "") },
+    params: { slug: post.id },
     props: { post },
   }));
 }

@@ -29,7 +29,20 @@ export function longDate(d: Date): string {
 }
 
 export function postHref(p: Post): string {
-  return `/posts/${p.id.replace(/\.md$/, "")}`;
+  // Astro 4's contentLayer glob loader already strips the `.md` from
+  // `id`, so this is just a bare-slug → URL transform. Trailing slash
+  // omitted on purpose — Astro's static output works with or without
+  // it, and consistency with the rest of the codebase wins.
+  return `/posts/${p.id}`;
+}
+
+/**
+ * Tiny English pluralizer. Centralized so headers / counts / chips
+ * never disagree (the archive client JS already had this rule inline —
+ * everywhere else used to hardcode the plural form).
+ */
+export function plural(n: number, singular: string, pluralForm?: string): string {
+  return `${n} ${n === 1 ? singular : (pluralForm ?? singular + "s")}`;
 }
 
 /**

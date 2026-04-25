@@ -18,7 +18,6 @@
     "@astrojs/sitemap": "~3.3.0",
     "astro": "^4.16.0",
     "katex": "^0.16.11",
-    "prismjs": "^1.30.0",
     "rehype-katex": "^7.0.0",
     "remark-math": "^6.0.0"
   },

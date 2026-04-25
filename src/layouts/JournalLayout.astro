@@ -25,9 +25,10 @@ const { title, description, issue, essayCount } = Astro.props;
   <BaseHead title={title} description={description} />
 </head>
 <body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
   <TopBar />
   <Masthead issue={issue} essayCount={essayCount} />
-  <slot />
+  <main id="main"><slot /></main>
   <Footer />
 </body>
 </html>

@@ -2,29 +2,59 @@
 /**
  * BaseHead — shared <head> contents.
  * Kept isolated so layouts don't each maintain their own font/meta loaders.
+ *
+ * Defaults are deliberately Korean-first (the site's primary language).
+ * Pages that want a different description / OG image override per-call.
+ *
+ * KaTeX CSS is imported as a bundled asset rather than fetched from a CDN.
+ *   - Versions stay in sync: bumping the `katex` package automatically
+ *     updates the stylesheet, with no SRI hash to forget.
+ *   - One fewer third-party DNS lookup on first paint.
  */
+import "katex/dist/katex.min.css";
+
 export interface Props {
   title: string;
   description?: string;
+  ogImage?: string;
   canonical?: string;
 }
-const { title, description = "A quiet journal on tools, attention, and making things.", canonical } = Astro.props;
+const {
+  title,
+  description = "정리 중인 생각을 위한 작은 공간. 도구, 주의력, 만드는 일에 관한 조용한 저널.",
+  ogImage = "/og-default.svg",
+  canonical,
+} = Astro.props;
 const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site);
+const ogImageURL = new URL(ogImage, Astro.site);
 ---
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="generator" content={Astro.generator} />
+<meta name="theme-color" content="#2155A4" />
 
 <title>{title}</title>
 <meta name="description" content={description} />
 <link rel="canonical" href={canonicalURL} />
+
+<!-- Favicon (SVG only — modern browsers handle it; older clients fall
+     back to the default GitHub Pages favicon, which is fine here). -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
 <!-- OpenGraph -->
 <meta property="og:type" content="website" />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonicalURL} />
+<meta property="og:image" content={ogImageURL} />
+<meta property="og:locale" content="ko_KR" />
+
+<!-- Twitter — summary_large_image needs a real image attached, which we
+     always supply via og-default.svg unless the page overrides. -->
 <meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImageURL} />
 
 <!-- RSS discovery -->
 <link rel="alternate" type="application/rss+xml" title="HANBIN — A Journal" href="/rss.xml" />
@@ -36,6 +66,3 @@ const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site);
   rel="stylesheet"
   href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Nanum+Myeongjo:wght@400;700;800&display=swap"
 />
-
-<!-- KaTeX CSS for math rendering -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" />
