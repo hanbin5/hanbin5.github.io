@@ -13,8 +13,8 @@ import { getPublishedPosts } from "../../lib/posts";
  * exclude future-dated posts, gate by a `published-at` field, etc.,
  * this page picks the change up automatically.
  *
- * Astro 4's contentLayer glob loader strips the `.md` from `id`, so
- * `post.id` is already the bare slug. No regex stripping needed.
+ * The glob loader strips the `.md` from `id`, so `post.id` is already
+ * the bare slug. No regex stripping needed.
  */
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();

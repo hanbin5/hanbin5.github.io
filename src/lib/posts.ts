@@ -29,10 +29,8 @@ export function longDate(d: Date): string {
 }
 
 export function postHref(p: Post): string {
-  // Astro 4's contentLayer glob loader already strips the `.md` from
-  // `id`, so this is just a bare-slug → URL transform. Trailing slash
-  // omitted on purpose — Astro's static output works with or without
-  // it, and consistency with the rest of the codebase wins.
+  // The glob loader strips the `.md` from `id`, so this is just a
+  // bare-slug → URL transform.
   return `/posts/${p.id}`;
 }
 

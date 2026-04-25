@@ -14,9 +14,9 @@
     "sync:dev": "bash scripts/sync-from-vault.sh && astro dev"
   },
   "dependencies": {
-    "@astrojs/rss": "^4.0.0",
-    "@astrojs/sitemap": "~3.3.0",
-    "astro": "^4.16.0",
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.2",
+    "astro": "^5.18.1",
     "katex": "^0.16.11",
     "rehype-katex": "^7.0.0",
     "remark-math": "^6.0.0"

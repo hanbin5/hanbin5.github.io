@@ -7,12 +7,6 @@ import rehypeKatex from "rehype-katex";
 export default defineConfig({
   site: "https://hanbin5.github.io",
   integrations: [sitemap()],
-  experimental: {
-    // Enable the Content Layer API (stable in Astro 5, still flagged in 4.x).
-    // This is what lets defineCollection({ loader: glob(...) }) see our
-    // repo-root `content/` directory. When we upgrade to Astro 5, remove.
-    contentLayer: true,
-  },
   markdown: {
     remarkPlugins: [remarkMath],
     rehypePlugins: [
