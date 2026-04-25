@@ -27,8 +27,7 @@ hanbin5.github.io/
 │       └── prose.css           post reading view
 ├── scripts/sync-from-vault.sh  Vault → content/posts (tag-based)
 ├── .github/workflows/deploy.yml
-├── astro.config.mjs
-└── REFACTOR_PLAN.md
+└── astro.config.mjs
 ```
 
 ---
