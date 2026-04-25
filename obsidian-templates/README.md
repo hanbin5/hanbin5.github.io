@@ -144,30 +144,55 @@ git push              # GitHub Actions가 자동 배포
 
 ---
 
-## 이미지·첨부 처리
+## 이미지·첨부 처리 — selective auto-sync
 
-Obsidian의 `![[photo.png]]` wiki embed는 현재 빌드 파이프라인에서 **변환되지 않습니다**. 해결책 중 하나 선택:
+Obsidian의 `![[photo.png]]` wiki embed가 sync 단계에서 **자동 처리됩니다.**
+별도 작업 없이 평소처럼 노트에 이미지를 박으면 됩니다.
 
-### 방법 A: 표준 markdown 이미지 + public/attachments
+### 작동 방식
 
-1. 이미지를 저장소의 `public/attachments/`에 복사.
-2. 마크다운에서 절대경로로 참조:
-   ```md
-   ![SLAM trajectory plot](/attachments/slam-trajectory.png)
-   ```
-3. Obsidian에서도 이 경로가 유효하도록, Vault 루트에 `attachments`
-   폴더를 심볼릭 링크로 걸어두면 양쪽에서 똑같이 보임.
+1. **공개용 이미지는 vault의 `06_Public_Attachments/`에 둔다.**
+   - Obsidian Settings → Files & Links → "Default location for new
+     attachments"을 `06_Public_Attachments/`로 잡으면, drag&drop 시 자동
+     으로 거기로 떨어집니다.
+   - 작업용/비공개 이미지는 `05_Attachments/`에 둡니다. sync는 이 폴더는
+     **절대 안 봅니다** — 폴더 분리가 publish 게이트입니다.
 
-### 방법 B: 외부 호스팅 (권장 — CDN 부담 없음)
+2. **published된 노트가 본문에서 참조하는 이미지만** sync 시 git에 들어
+   갑니다.
+   - `![[slam-trajectory.png]]` ← 06_Public_Attachments/에서 찾아 복사
+   - `![[diagrams/architecture.png|시스템 구조도]]` ← 서브폴더 OK, alt 보존
+   - 위 두 케이스 모두 sync 후 노트는 `![alt](/attachments/file.png)` 형태로
+     자동 변환되어 Astro가 렌더링.
+   - 06_Public_Attachments/에 있어도 published 노트가 참조 안 하면 git에
+     안 들어감 — repo는 "실제로 사이트에 보일 것"만큼만 큼.
 
-GitHub issue에 drag & drop → GitHub이 cdn URL 제공 → 그 URL을
-마크다운에 붙여넣기.
+3. **참조했는데 06_Public_Attachments/에 없는 파일은 경고만 찍고 넘어감.**
+   - sync 출력에 `⚠️ missing-attachment: foo.png` 표시
+   - 빌드는 성공하지만 사이트에선 깨진 이미지 자리에 alt 텍스트가 보이는
+     "loud failure" 상태가 됨 → 글 발행 전에 발견하기 쉬움
+   - 해결: 그 파일을 05_Attachments에서 06으로 옮기거나, 참조를 수정.
 
-### 방법 C: 나중에 파이프라인 확장
+4. 지원 확장자: `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.webp`. PDF/영상
+   같은 다른 타입을 sync 대상에 추가하려면 `scripts/sync-from-vault.sh`의
+   `IMG_EXT` 변수를 수정.
 
-`scripts/sync-from-vault.sh`를 확장해서 `![[...]]` 참조 스캔 후 Vault의
-attachment 폴더에서 `public/attachments/`로 rsync하도록 만들 수 있음.
-지금은 미구현.
+### Repo 비대화에 대해
+
+- public/attachments/는 sync가 **wipe-and-recreate**하므로, 참조에서
+  빠진 이미지는 다음 sync 때 자동으로 빠짐 (working tree 기준).
+- 단 git **히스토리**에는 한 번 commit된 파일이 남음. 1년에 글 12편 ×
+  이미지 5장 × 200KB = ~12MB 정도가 누적의 자연스러운 페이스. 수년간
+  쌓여도 GitHub 권장 1GB 안쪽일 것.
+- 그보다 큰 파일(>500KB)은 git에 들이지 말고 외부 CDN URL을 본문에 직접
+  적기를 권장. wiki embed는 기존 자료에만 쓰고 큰 파일은 외부.
+
+### 외부 URL을 그대로 쓰고 싶을 때
+
+표준 마크다운 형태(`![alt](https://...)`)는 sync가 건드리지 않습니다.
+GitHub Issue / Cloudflare R2 / Imgur 등 어디든 외부 호스팅된 이미지는 그
+URL을 본문에 그대로 적으면 됩니다. 큰 동영상이나 자주 갱신되는 자료는 이
+방식이 자연스럽습니다.
 
 ---
 
@@ -187,12 +212,55 @@ MathJax 문법 대부분이 호환되지만, 다음은 예외:
 
 ---
 
-## Obsidian 링크 처리
+## Obsidian 링크 처리 — wiki link 자동 해석
 
-`[[다른 노트]]` 스타일 wiki link는 빌드에 나오지 않습니다. 공개 글 안에서 다른 공개 글로 링크 걸려면 표준 마크다운:
+`[[다른 노트]]` 스타일 wiki link도 sync 단계에서 자동으로 표준 마크다운
+링크로 변환됩니다. Obsidian에서 평소처럼 노트끼리 링크를 걸면 됩니다.
 
-```md
-[Kalman 필터 입문](/posts/kalman-intro)
-```
+### 작동 방식
 
-URL은 파일명 stem (슬래시 구분) 그대로 따라갑니다.
+sync는 두 패스로 동작합니다:
+
+1. **1패스**: vault를 훑어 publish 게이트를 통과하는 모든 노트의
+   `{ 파일명 stem → URL slug }` 맵을 만듭니다.
+2. **2패스**: 각 published 노트를 복사하면서 본문의 wiki link를 그
+   맵으로 해석합니다. 슬러그는 lowercase + 공백→하이픈으로 정규화됨.
+   (Astro의 라우트가 lowercase여서 — `Loop Closure.md`는 `/posts/loop-closure/`
+   로 발행됩니다.)
+
+### 변환 규칙
+
+| 원본 (Obsidian) | 변환 결과 (사이트) |
+|---|---|
+| `[[Loop Closure]]` | `[Loop Closure](/posts/loop-closure)` |
+| `[[Loop Closure\|루프 클로저]]` | `[루프 클로저](/posts/loop-closure)` |
+| `[[loop closure]]` (소문자 typing) | `[loop closure](/posts/loop-closure)` — 매칭은 case-insensitive |
+| `[[Loop Closure#Section]]` | `[Loop Closure](/posts/loop-closure)` — heading anchor는 v1에선 drop |
+| `[[Loop Closure^block]]` | 그대로 — block 참조는 미지원 |
+
+### 비공개 또는 존재하지 않는 노트로의 링크
+
+대상 노트가 **publish 게이트를 통과하지 않거나 vault에 아예 없으면**
+sync가 두 가지를 합니다:
+- 본문의 `[[…]]`를 **그대로 둠** (변환 안 함). 사이트에 리터럴
+  `[[Private Thoughts]]` 텍스트로 노출되는 "loud failure" 상태가 됨.
+- sync 출력에 `⚠️  unpublished-link: <name>` 경고를 찍음.
+
+이 동작은 의도된 것입니다 — silent fix가 되면 시간이 지나서 *내가 모르는
+사이 깨진 링크가 본문에 박혀 있는* 상황이 생기는데, 사이트 본문에 깨진
+링크가 보이면 발견 즉시 수정할 수 있습니다.
+
+해결 방법: 대상 노트에 `publish: true` + `draft: false`를 추가해 다음
+sync에서 같이 발행되도록 하거나, 링크 자체를 표준 마크다운(외부 URL)
+이나 평문으로 바꿉니다.
+
+### Heading anchor를 활성화하고 싶다면 (v2)
+
+현재 `[[X#H]]`의 `#H` 부분은 drop 됩니다. 활성화하려면:
+
+1. `astro.config.mjs`의 markdown 설정에 `rehype-slug`를 추가
+2. `scripts/sync-from-vault.sh`의 `process_links` 안에서 heading 부분을
+   동일 슬러그화 로직으로 URL 끝에 붙이도록 perl 치환을 확장
+
+지금은 페이지 단위 링크만 자동화되어 있고, 섹션 단위 점프는 수동으로
+표준 마크다운(`[Section](/posts/slug#section-slug)`)을 적어야 합니다.

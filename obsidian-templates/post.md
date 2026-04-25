@@ -51,11 +51,15 @@ def residual(z, x_pred, H):
 
 ## 섹션 2
 
-- 이미지: `![alt](/attachments/filename.png)` — 파일은 저장소의
-  `public/attachments/`에 직접 넣어두기. Obsidian의 `![[name.png]]`
-  wiki embed는 변환되지 않으니 주의.
-- 링크: 표준 마크다운만 — `[텍스트](URL)`. Obsidian wiki link
-  `[[다른 노트]]`는 빌드에 나오지 않는다.
+- 이미지: Obsidian의 `![[file.png]]` wiki embed 그대로 써도 됨 — sync 시
+  자동으로 표준 마크다운으로 변환되고 파일은 `public/attachments/`로 복사.
+  단 이미지는 vault의 **`06_Public_Attachments/`**에 있어야 함 (05_*는
+  비공개 영역, sync가 안 봄). 외부 CDN URL을 직접 박는 것도 OK —
+  `![alt](https://...)` 형태는 sync가 건드리지 않음.
+- 링크: Obsidian wiki link `[[다른 노트]]` / `[[다른 노트|별칭]]` 그대로
+  사용 가능 — sync가 published된 다른 노트로 자동 해석함. 비공개/없는
+  노트로 링크하면 본문에 그대로 남아 사이트에서 가시적 깨짐으로 노출됨.
+  외부 링크는 표준 마크다운 `[텍스트](URL)`을 그대로 쓰면 됨.
 
 ---
 
