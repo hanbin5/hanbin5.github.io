@@ -69,9 +69,15 @@ draft: false                   # sync용
 - **title / date**: 없으면 Astro가 빌드 실패. 반드시 채울 것.
 - **dek**: hero/card/RSS에서 1~2줄로 노출되는 부제. 긴 글의
   *핵심 문장 요약*을 넣는 게 일반적.
-- **category**: 넓은 장르 (Essay, Research, Tools, Books, Note). 카드
-  하단 2차 라벨로 표시됨. 필수 아님.
-- **tags**: **이것이 프로젝트다.** 아래 섹션 참고.
+- **category**: **닫힌 enum** — `Essay` / `Note` / `Log` / `Review`.
+  default `Essay`. 다른 값을 넣으면 빌드가 거부함 (오타 드리프트 방지).
+  새 값을 추가하려면 `src/content/config.ts`의 `CATEGORIES`를 먼저 수정.
+  - `Essay` — 길게 끌고 가는 생각, 독자에게 보여주려는 글
+  - `Note` — 본인이 학습한 걸 정리한 노트
+  - `Log` — 작업/실험/리딩 일지 (시점성)
+  - `Review` — 외부 자료(논문/책/도구) 평가
+- **tags**: **이것이 프로젝트다.** 아래 섹션 참고. category와 직교하는
+  열린 axis — 자유 입력, 여러 개 가능, 순서가 의미 있음.
 - **readtime**: 자유 문자열. "8분 분량", "10 min" 같은 표기. 자동 계산
   아님 — 직접 판단해서 적음.
 - **issue / number**: 매거진 관용 스타일 표기. 없으면 사이트가 자동 생성.

@@ -572,11 +572,17 @@ a { color: inherit; text-decoration: none; }
 }
 .kanban-more::after { content: " →"; }
 
-/* ============ PROJECT FILTER (chip row above archive) ============ */
+/* ============ ARCHIVE FILTERS (project + category chip rows) ============ */
+/* Two stacked filter blocks above the archive list. Same visual treatment;
+   the only difference is which axis their chips drive. AND-combined in JS. */
 .project-filter {
-  padding: 20px 0 32px;
+  padding: 20px 0 16px;
 }
-.project-filter .filter-label {
+.category-filter {
+  padding: 0 0 32px;
+}
+.project-filter .filter-label,
+.category-filter .filter-label {
   font-family: var(--mono);
   font-size: 10px;
   text-transform: uppercase;

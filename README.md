@@ -97,7 +97,7 @@ Create `content/posts/YYYY-MM-DD-slug.md`:
 title: "제목"
 date: 2026-05-01
 dek: "부제"
-category: "Essay"
+category: "Essay"        # one of: Essay | Note | Log | Review (default: Essay)
 readtime: "6분 분량"
 tags: [project-name]
 draft: false
@@ -109,18 +109,19 @@ publish: true
 
 ### Publish model
 
-Publishing is a **single boolean** at the note level, not a folder move:
+Publishing is gated by **two booleans** at the note level, not a folder move:
 
-| frontmatter                      | result                                              |
-|----------------------------------|-----------------------------------------------------|
-| `publish: false`                 | stays in vault only                                 |
-| `publish: true` + `draft: false` | synced to site on next `npm run sync`               |
-| `publish: true` + `draft: true`  | sync skips it (draft override)                      |
+| frontmatter                      | result                                                      |
+|----------------------------------|-------------------------------------------------------------|
+| `publish: false` (or missing)    | stays in vault only                                         |
+| `publish: true` + `draft: false` | synced to site on next `npm run sync`                       |
+| `publish: true` + `draft: true`  | sync skips it (draft override)                              |
+| `publish: true` + draft missing  | sync skips it — explicit `draft: false` is required opt-in  |
 
 Vault organization (daily notes, research, drafts) is independent of
 what's public.
 
-### Project model
+### Project model (tags)
 
 Project = first tag. Example:
 
@@ -133,6 +134,23 @@ tags: []                               # column: (unclassified)
 Kanban caps each column at **5 cards** — overflow becomes
 `+N more in this project →` linking to `/archive?tag=slam-research` with
 the filter pre-activated.
+
+### Category model (genre)
+
+Category is a closed enum — adding a new value is a deliberate edit to
+`src/content/config.ts` (`CATEGORIES`), not a free-form string. This
+prevents typo drift and lets the archive filter list exactly what exists.
+
+| Category | Use it for                                                   |
+|----------|--------------------------------------------------------------|
+| `Essay`  | Long-form thinking, argument-shaped writing (default)        |
+| `Note`   | Learning notes — what you wrote to teach yourself            |
+| `Log`    | Work / experiment / reading logs — time-stamped artifacts    |
+| `Review` | Reviews of papers, books, tools — reactive writing           |
+
+`/archive` exposes Category alongside Project as a second filter axis
+(AND-combined). Deep link both at once:
+`/archive?tag=slam-research&category=Note`.
 
 ---
 

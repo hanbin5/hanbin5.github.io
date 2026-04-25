@@ -1,6 +1,7 @@
 ---
 import JournalLayout from "../layouts/JournalLayout.astro";
 import { getPublishedPosts, longDate, postHref } from "../lib/posts";
+import { CATEGORIES } from "../content/categories";
 
 const posts = await getPublishedPosts();
 
@@ -21,6 +22,20 @@ posts.forEach((p) => {
 const projects = [...tagCounts.entries()]
   .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
   .map(([tag, count]) => ({ tag, count }));
+
+// Build the Category (genre) index.
+//   Categories are a closed enum (see content/config.ts). We render the
+//   chip row in the canonical schema order so the UI is stable even when
+//   some categories happen to have zero posts at the moment.
+const categoryCounts = new Map<string, number>();
+posts.forEach((p) => {
+  const c = p.data.category;
+  categoryCounts.set(c, (categoryCounts.get(c) ?? 0) + 1);
+});
+const categories = CATEGORIES.map((c) => ({
+  category: c,
+  count: categoryCounts.get(c) ?? 0,
+}));
 ---
 <JournalLayout
   title="Archive — HANBIN"
@@ -39,7 +54,7 @@ const projects = [...tagCounts.entries()]
       {projects.length > 0 && (
         <div class="project-filter" id="project-filter">
           <div class="filter-label">Filter by project</div>
-          <div class="chip-row">
+          <div class="chip-row" data-filter-axis="tag">
             <button type="button" class="chip active" data-tag="">
               All <span class="count">{posts.length}</span>
             </button>
@@ -52,9 +67,28 @@ const projects = [...tagCounts.entries()]
         </div>
       )}
 
+      <div class="category-filter" id="category-filter">
+        <div class="filter-label">Filter by category</div>
+        <div class="chip-row" data-filter-axis="category">
+          <button type="button" class="chip active" data-category="">
+            All <span class="count">{posts.length}</span>
+          </button>
+          {categories.map(({ category, count }) => (
+            <button type="button" class="chip" data-category={category}>
+              {category} <span class="count">{count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div class="archive-list">
         {posts.map((p) => (
-          <a class="archive-row" href={postHref(p)} data-tags={p.data.tags.join(",")}>
+          <a
+            class="archive-row"
+            href={postHref(p)}
+            data-tags={p.data.tags.join(",")}
+            data-category={p.data.category}
+          >
             <span class="idx">№ {String(rankById.get(p.id) ?? 0).padStart(3, "0")}</span>
             <span class="date">{longDate(p.data.date)}</span>
             <span class="title" set:html={p.data.title}></span>
@@ -65,7 +99,7 @@ const projects = [...tagCounts.entries()]
       </div>
 
       <p class="archive-empty" id="archive-empty" hidden>
-        해당 프로젝트에 속하는 글이 아직 없습니다.
+        해당 조건에 맞는 글이 아직 없습니다.
       </p>
     </div>
   </section>
@@ -73,23 +107,47 @@ const projects = [...tagCounts.entries()]
 
 <script>
   /**
-   * Client-side Project filter.
+   * Client-side filter — two axes (Project + Category), AND-combined.
    * ------------------------------------------------------------------
-   * Each archive row carries `data-tags="a,b,c"`. Clicking a chip hides
-   * rows whose tags don't include the chosen one. "All" (empty tag) resets.
+   * Each archive row carries:
+   *   - data-tags="a,b,c"   (project membership; multiple)
+   *   - data-category="..." (genre; exactly one)
+   *
+   * State is one selected value per axis. Empty string = "All" on that
+   * axis. A row is shown only when BOTH axes match (AND). Each chip row
+   * is scoped by `data-filter-axis` so we can manage active state
+   * independently per axis.
+   *
+   * Deep links: /archive?tag=slam-research&category=Note pre-applies
+   * both filters. Unknown values are ignored gracefully (case-insensitive
+   * match for tag; categories are matched case-insensitively too since
+   * the enum lookup tolerates it).
+   *
    * Pure vanilla JS — no framework, no hydration cost.
    */
   (() => {
     const rows = Array.from(document.querySelectorAll<HTMLElement>(".archive-row"));
-    const chips = Array.from(document.querySelectorAll<HTMLButtonElement>(".chip"));
     const counter = document.querySelector<HTMLElement>(".archive-count");
     const empty = document.querySelector<HTMLElement>("#archive-empty");
 
-    function apply(tag: string) {
+    const tagChips = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-filter-axis="tag"] .chip'),
+    );
+    const categoryChips = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-filter-axis="category"] .chip'),
+    );
+
+    let activeTag = "";
+    let activeCategory = "";
+
+    function apply() {
       let visible = 0;
       rows.forEach((row) => {
         const tags = (row.dataset.tags || "").split(",").filter(Boolean);
-        const show = !tag || tags.includes(tag);
+        const category = row.dataset.category || "";
+        const tagOk = !activeTag || tags.includes(activeTag);
+        const catOk = !activeCategory || category === activeCategory;
+        const show = tagOk && catOk;
         row.style.display = show ? "" : "none";
         if (show) visible++;
       });
@@ -97,28 +155,51 @@ const projects = [...tagCounts.entries()]
         counter.textContent = `${visible} ${visible === 1 ? "entry" : "entries"}`;
       }
       if (empty) empty.hidden = visible !== 0;
-      chips.forEach((c) => c.classList.toggle("active", c.dataset.tag === tag));
+      tagChips.forEach((c) =>
+        c.classList.toggle("active", (c.dataset.tag || "") === activeTag),
+      );
+      categoryChips.forEach((c) =>
+        c.classList.toggle("active", (c.dataset.category || "") === activeCategory),
+      );
     }
 
-    chips.forEach((chip) => {
-      chip.addEventListener("click", () => apply(chip.dataset.tag || ""));
+    tagChips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        activeTag = chip.dataset.tag || "";
+        apply();
+      });
     });
 
-    // Deep link: /archive?tag=slam-research preselects that project.
-    // We match case-insensitively and ignore unknown tags gracefully.
+    categoryChips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        activeCategory = chip.dataset.category || "";
+        apply();
+      });
+    });
+
+    // Deep link: read both URL params, find matching chips (case-insensitive).
     const params = new URLSearchParams(window.location.search);
-    const requested = (params.get("tag") || "").toLowerCase();
-    if (requested) {
-      const match = chips.find(
-        (c) => (c.dataset.tag || "").toLowerCase() === requested,
+    const reqTag = (params.get("tag") || "").toLowerCase();
+    const reqCat = (params.get("category") || "").toLowerCase();
+
+    if (reqTag) {
+      const match = tagChips.find(
+        (c) => (c.dataset.tag || "").toLowerCase() === reqTag,
       );
-      if (match) {
-        apply(match.dataset.tag || "");
-        // Pull the filter into view without a hard jump.
-        document
-          .getElementById("project-filter")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      if (match) activeTag = match.dataset.tag || "";
+    }
+    if (reqCat) {
+      const match = categoryChips.find(
+        (c) => (c.dataset.category || "").toLowerCase() === reqCat,
+      );
+      if (match) activeCategory = match.dataset.category || "";
+    }
+    if (activeTag || activeCategory) {
+      apply();
+      // Pull the filters into view without a hard jump.
+      document
+        .getElementById("project-filter")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   })();
 </script>

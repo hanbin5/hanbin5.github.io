@@ -5,7 +5,12 @@ date: {{date:YYYY-MM-DD}}
 
 # Recommended — shown on hero/cards/RSS.
 dek: "부제 한 줄 — 없으면 비워둬도 됨"
-category: "Essay"          # 넓은 장르: Essay / Research / Note / Tools / Books …
+category: "Essay"          # 닫힌 enum: Essay | Note | Log | Review (default: Essay).
+                           #   Essay  — 길게 끌고 가는 생각, 독자에게 보여주려는 글
+                           #   Note   — 본인이 학습한 걸 정리한 노트
+                           #   Log    — 작업/실험/리딩 일지 (시점성)
+                           #   Review — 외부 자료(논문/책/도구) 평가
+                           # 다른 값을 쓰려면 src/content/config.ts의 CATEGORIES를 먼저 수정.
 readtime: ""               # "8분 분량" 같은 문자열. 비우면 카드에서 숨겨짐.
 
 # Project tags — the PRIMARY classification axis.
