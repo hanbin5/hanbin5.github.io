@@ -2,7 +2,14 @@
 import JournalLayout from "../layouts/JournalLayout.astro";
 import HeroStory from "../components/HeroStory.astro";
 import EditorBand from "../components/EditorBand.astro";
-import { getPublishedPosts, longDate, postHref, plural } from "../lib/posts";
+import {
+  getPublishedPosts,
+  buildRankById,
+  longDate,
+  postHref,
+  postNumber,
+  plural,
+} from "../lib/posts";
 import type { Post } from "../lib/posts";
 
 /**
@@ -22,10 +29,7 @@ import type { Post } from "../lib/posts";
 const posts = await getPublishedPosts();
 const totalPosts = posts.length;
 
-// Oldest-first rank for stable № numbering.
-const oldestFirst = [...posts].reverse();
-const rankById = new Map<string, number>();
-oldestFirst.forEach((p, i) => rankById.set(p.id, i + 1));
+const rankById = buildRankById(posts);
 
 const hero = posts[0];
 
@@ -76,7 +80,7 @@ const issueLabel = hero?.data.issue
       headline={hero.data.title}
       deck={hero.data.dek}
       readTime={hero.data.readtime}
-      date={hero.data.date.toISOString().slice(0, 10).replace(/-/g, ".")}
+      date={longDate(hero.data.date)}
       href={postHref(hero)}
     />
   )}
@@ -104,7 +108,7 @@ const issueLabel = hero?.data.issue
                 <a class="kanban-card" href={postHref(p)}>
                   <div class="card-meta">
                     <span class="card-date">{longDate(p.data.date)}</span>
-                    <span class="card-num">№ {String(rankById.get(p.id) ?? 0).padStart(3, "0")}</span>
+                    <span class="card-num">{postNumber(p, rankById.get(p.id) ?? 0)}</span>
                   </div>
                   <h4 class="card-title" set:html={p.data.title}></h4>
                   {p.data.dek && <p class="card-dek">{p.data.dek}</p>}
@@ -141,8 +145,8 @@ const issueLabel = hero?.data.issue
       <div class="archive-list">
         {posts.slice(0, 8).map((p) => (
           <a class="archive-row" href={postHref(p)} data-tags={JSON.stringify(p.data.tags)}>
-            <span class="idx">№ {String(rankById.get(p.id) ?? 0).padStart(3, "0")}</span>
-            <span class="date">{p.data.date.toISOString().slice(0, 10).replace(/-/g, ".")}</span>
+            <span class="idx">{postNumber(p, rankById.get(p.id) ?? 0)}</span>
+            <span class="date">{longDate(p.data.date)}</span>
             <span class="title" set:html={p.data.title}></span>
             <span class="cat">{p.data.category}</span>
             <span class="read">{p.data.readtime ?? ""}</span><!-- empty span keeps the grid columns aligned -->

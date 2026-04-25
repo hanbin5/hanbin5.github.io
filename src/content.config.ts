@@ -42,7 +42,7 @@ const post = defineCollection({
     category: z.enum(CATEGORIES).default("Essay"),
     date:     z.coerce.date(),
     issue:    z.number().int().optional(),
-    number:   z.string().optional(),            // e.g. "No. 012"
+    number:   z.string().optional(),            // e.g. "№ 012"
     readtime: z.string().optional(),            // e.g. "8분 분량"
     cover:    z.string().optional(),
     draft:    z.boolean().default(false),

@@ -1,14 +1,17 @@
 ---
 import JournalLayout from "../layouts/JournalLayout.astro";
-import { getPublishedPosts, longDate, postHref, plural } from "../lib/posts";
+import {
+  getPublishedPosts,
+  buildRankById,
+  longDate,
+  postHref,
+  postNumber,
+  plural,
+} from "../lib/posts";
 import { CATEGORIES } from "../content/categories";
 
 const posts = await getPublishedPosts();
-
-// Oldest-first rank for stable "№ 001…" numbering.
-const oldestFirst = [...posts].reverse();
-const rankById = new Map<string, number>();
-oldestFirst.forEach((p, i) => rankById.set(p.id, i + 1));
+const rankById = buildRankById(posts);
 
 // Build the Project (tag) index.
 //   Tags are treated as "projects" — the primary classification axis.
@@ -98,7 +101,7 @@ const categories = CATEGORIES.map((c) => ({
             data-tags={JSON.stringify(p.data.tags)}
             data-category={p.data.category}
           >
-            <span class="idx">№ {String(rankById.get(p.id) ?? 0).padStart(3, "0")}</span>
+            <span class="idx">{postNumber(p, rankById.get(p.id) ?? 0)}</span>
             <span class="date">{longDate(p.data.date)}</span>
             <span class="title" set:html={p.data.title}></span>
             <span class="cat">{p.data.category}</span>

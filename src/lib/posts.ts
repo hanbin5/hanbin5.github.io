@@ -44,11 +44,23 @@ export function plural(n: number, singular: string, pluralForm?: string): string
 }
 
 /**
- * Derive a display "number" for a post.
- * If the frontmatter supplies `number` use it; otherwise generate
- * "№ 001" style from the post's chronological rank.
+ * Build the chronological rank index. Posts are numbered from the
+ * oldest forward, so a post's № stays put when newer posts get added —
+ * the page-level slice/filter can change without renumbering anything.
+ */
+export function buildRankById(posts: Post[]): Map<string, number> {
+  const oldestFirst = [...posts].reverse();
+  const rankById = new Map<string, number>();
+  oldestFirst.forEach((p, i) => rankById.set(p.id, i + 1));
+  return rankById;
+}
+
+/**
+ * Derive a display "number" for a post — "№ 001" style, prefix
+ * included. If the frontmatter supplies a literal `number` (e.g.
+ * "№ 012"), it wins.
  */
 export function postNumber(p: Post, rankFromOldest: number): string {
   if (p.data.number) return p.data.number;
-  return `No. ${String(rankFromOldest).padStart(3, "0")}`;
+  return `№ ${String(rankFromOldest).padStart(3, "0")}`;
 }
