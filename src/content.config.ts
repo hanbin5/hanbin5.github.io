@@ -1,6 +1,6 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
-import { CATEGORIES } from "./categories";
+import { CATEGORIES } from "./content/categories";
 
 /**
  * Post schema.
