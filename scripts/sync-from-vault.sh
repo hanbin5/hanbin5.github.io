@@ -3,8 +3,11 @@
 # ----------------------------------------------------------------------
 # Walks the entire vault and copies any .md note whose frontmatter has
 #     publish: true
-# into this repo's content/posts/. Notes with `draft: true` are skipped
-# even if publish is on, so drafts never leak.
+#     draft:   false   (must be EXPLICITLY present)
+# into this repo's content/posts/. A note with `draft: true` or with no
+# `draft` field at all is skipped, even if publish is on. Requiring an
+# explicit draft:false forces an opt-in: a fresh note doesn't leak just
+# because the user happened to flip publish on.
 #
 # Why this model instead of mapping specific folders?
 #   - Vault organization (daily notes, research, archive) becomes
@@ -51,10 +54,17 @@ while IFS= read -r -d '' file; do
     continue
   fi
 
-  # Respect an explicit `draft: true` — never publish drafts.
+  # Skip if draft is explicitly checked.
   if printf '%s\n' "$head" | grep -qE '^draft:[[:space:]]*true[[:space:]]*$'; then
     skipped_draft=$((skipped_draft + 1))
-    echo "  ⏸  draft:  $(basename "$file")"
+    echo "  ⏸  draft:    $(basename "$file")"
+    continue
+  fi
+
+  # Require explicit `draft: false`. A missing draft field means the
+  # author hasn't decided yet — treat that as not ready and skip.
+  if ! printf '%s\n' "$head" | grep -qE '^draft:[[:space:]]*false[[:space:]]*$'; then
+    echo "  ⏸  no-draft: $(basename "$file")"
     continue
   fi
 
