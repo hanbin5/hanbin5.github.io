@@ -33,7 +33,7 @@
   --royal-gradient-c: var(--accent-bright);
 
   /* --- Typography --------------------------------------------------- */
-  --serif: "Fraunces", "Nanum Myeongjo", ui-serif, Georgia, serif;
+  --serif: "Lora", "Nanum Myeongjo", ui-serif, Georgia, serif;
   --sans:  "Inter", -apple-system, "Apple SD Gothic Neo", sans-serif;
   --mono:  "JetBrains Mono", ui-monospace, Menlo, monospace;
 

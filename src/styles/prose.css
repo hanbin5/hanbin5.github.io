@@ -28,12 +28,6 @@
   line-height: 1.2;
   margin-top: 2em;
   margin-bottom: 0.6em;
-  /* Fraunces ships an aggressive `fi`/`fl` ligature that warps at
-     display sizes — turning ligatures off in headings keeps `f`
-     looking like a regular `f` in words like "Definition". Body
-     prose at 19px is unaffected and keeps its ligatures. */
-  font-variant-ligatures: none;
-  font-feature-settings: "liga" 0, "dlig" 0;
 }
 
 /* The first child of the article shouldn't carry the 2em top margin —
