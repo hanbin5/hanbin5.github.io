@@ -30,7 +30,7 @@
 ---
 <aside class="toc-rail" aria-label="Table of contents" data-toc-empty>
   <nav class="toc">
-    <p class="toc-label">목차</p>
+    <p class="toc-label">Contents</p>
     <ol class="toc-list"></ol>
   </nav>
 </aside>
@@ -171,10 +171,15 @@
     position: absolute;
     top: 64px;          /* aligned with .post-header padding-top */
     bottom: 0;
-    /* Push the rail flush with the right edge of the page chrome.
-       max() keeps a sane minimum on narrower viewports. */
-    right: max(28px, calc((100vw - var(--container-max)) / 2 + var(--container-pad)));
     width: 200px;
+    /* Anchor the rail to the prose column rather than to the page
+       chrome. .prose renders at ~800px wide (68ch in Lora), centered
+       in the viewport, so its right edge sits at viewport-center +
+       400px. We park the TOC's left edge at viewport-center + 460px
+       to keep a clean ~60px breathing zone between body content and
+       the rail no matter how wide the window is. (Computed via
+       `right`: 100vw - (50vw + 460 + 200) = 50vw - 660.) */
+    right: calc(50vw - 660px);
     pointer-events: none;
   }
   .toc-rail .toc {
@@ -272,9 +277,12 @@
   .toc-item a.active .toc-num    { color: var(--accent); }
   .toc-item a.active .toc-marker { color: var(--accent); }
 
-  /* Hide the rail below 1200px — there isn't enough gutter to host
-     a 200px column without crowding the article. */
-  @media (max-width: 1199px) {
+  /* Hide the rail below 1340px. The prose column is 68ch ≈ 800px,
+     and we want at least a 60px gap before the 200px rail plus a
+     small viewport-edge margin — that needs ≈ 1320px of horizontal
+     space minimum. Below this, the article goes back to its normal
+     no-rail layout. */
+  @media (max-width: 1339px) {
     .toc-rail { display: none !important; }
   }
 </style>
