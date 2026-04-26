@@ -185,7 +185,11 @@
   max-width: 68ch;
   margin: 0 auto;
   padding: 56px 0 20px;
-  border-top: 1px solid var(--line);
+  /* No top border: the topbar's own (softened) bottom border already
+     marks the boundary between site chrome and article. Stacking two
+     rules in the same place created a visually heavy "thick black bar"
+     near the top of every post. The bottom border stays — it's the
+     magazine-style underscore that frames the title block. */
   border-bottom: 1px solid var(--line);
 }
 .post-header .meta {

@@ -58,7 +58,11 @@ button:focus-visible {
 
 /* ============ TOP BAR ============ */
 .topbar {
-  border-bottom: 1px solid var(--line);
+  /* Functional separator only — soft gray reads as "edge of UI chrome"
+     without competing with the post header's framing rule below the
+     title. The previous `var(--line)` was near-black and stacked with
+     post-header's own top border to look like a deliberately thick bar. */
+  border-bottom: 1px solid var(--line-soft);
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.08em;
