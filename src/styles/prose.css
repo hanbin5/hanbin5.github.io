@@ -8,7 +8,7 @@
 .prose {
   max-width: 68ch;
   margin: 0 auto;
-  padding: 48px 0 96px;
+  padding: 24px 0 96px;
   font-family: var(--serif);
   font-size: 19px;
   line-height: 1.75;
@@ -28,7 +28,17 @@
   line-height: 1.2;
   margin-top: 2em;
   margin-bottom: 0.6em;
+  /* Fraunces ships an aggressive `fi`/`fl` ligature that warps at
+     display sizes — turning ligatures off in headings keeps `f`
+     looking like a regular `f` in words like "Definition". Body
+     prose at 19px is unaffected and keeps its ligatures. */
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "dlig" 0;
 }
+
+/* The first child of the article shouldn't carry the 2em top margin —
+   the post header already sits above us with its own padding. */
+.prose > :first-child { margin-top: 0; }
 .prose h1 { font-size: 2.4em; }
 .prose h2 { font-size: 1.7em; border-bottom: 1px solid var(--line-soft); padding-bottom: 0.3em; }
 .prose h3 { font-size: 1.3em; }
