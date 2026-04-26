@@ -40,7 +40,7 @@ const plainTitle = title.replace(/<[^>]+>/g, "");
   <a class="skip-link" href="#main">본문으로 건너뛰기</a>
   <TopBar />
 
-  <main id="main">
+  <main id="main" class="post-main-area">
     <div class="container">
       <header class="post-header">
         <div class="meta">
@@ -56,9 +56,9 @@ const plainTitle = title.replace(/<[^>]+>/g, "");
         <slot />
       </article>
     </div>
-  </main>
 
-  <TableOfContents />
+    <TableOfContents />
+  </main>
 
   <Footer />
 </body>

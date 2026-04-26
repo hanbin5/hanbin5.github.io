@@ -56,6 +56,15 @@ button:focus-visible {
   padding: 0 var(--container-pad);
 }
 
+/* =====================================================================
+   POST PAGE — keeps the article perfectly centered (same column it
+   has always had) and provides a positioning context so TOC.astro
+   can park its rail in the right gutter without shifting the body.
+   ===================================================================== */
+.post-main-area {
+  position: relative;
+}
+
 /* ============ TOP BAR ============ */
 .topbar {
   /* Functional separator only — soft gray reads as "edge of UI chrome"

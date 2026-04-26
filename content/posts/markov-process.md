@@ -28,10 +28,12 @@ And you put all information in $S$ having finite space.
 > $$
 >
 It means that $s_t$ contains all informations of $s_t, \dots, s_1$.
-So, we can think 
 
-
-
+- Example
+  Given a state transition graph $a \to b \to c$, we can state that $p(c|b) = p(c|b, a)$.
+# Markov Decision Processes
+Our goal is an **optimal policy** $\pi^*: S \to A$. 
+It means a policy $\pi$ gives an action for each state, i.e., $\pi(s) = a$.
 
 
 

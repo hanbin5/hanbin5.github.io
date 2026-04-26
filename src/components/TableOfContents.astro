@@ -1,52 +1,56 @@
 ---
 /**
- * TableOfContents — Notion-style sticky TOC for individual posts.
+ * TableOfContents — magazine-style margin annotation for posts.
  *
- * Why client-side?
- *   The page's headings are rendered from MDX via Astro's content
- *   pipeline. Pulling them out at build time would mean parsing the
- *   compiled HTML in PostLayout.astro and threading slugs through;
- *   doing the work in the browser keeps the layout pipeline untouched
- *   and lets us reuse the *exact* DOM the reader sees (so anchor IDs
- *   line up automatically with the headings the user is reading).
+ * Visual language:
+ *   The site's section heads use a small mono number kicker ("01 — ")
+ *   alongside a serif title. The TOC borrows the exact same pattern:
+ *   small muted mono index, serif title, fine and quiet. h3 entries
+ *   drop the number (they're sub-sections of the parent h2) and shift
+ *   right with a small italic dash, the way classical print TOCs
+ *   express subordinate entries.
  *
- * Behavior:
- *   1. After load, scan `<article class="prose">` for h2 and h3.
- *   2. Auto-assign `id`s (slugified, deduped) to any heading that
- *      doesn't already have one.
- *   3. Build a flat list of links; h3s are visually indented.
- *   4. Track the heading currently at the top of the reading area
- *      and highlight its link (Notion-style).
- *   5. Hide the whole component if there are zero headings, so we
- *      don't leave an empty rail floating in the gutter.
+ * Layout language:
+ *   The article stays *exactly* where it has always been — perfectly
+ *   centered in the page chrome. The rail is absolutely positioned
+ *   inside <main> (which is set position:relative in newsprint.css),
+ *   so it occupies the right gutter without disturbing the article's
+ *   centering. The inner <nav> uses position:sticky so it pins while
+ *   the reader scrolls, and naturally stops at the bottom of <main>
+ *   (i.e., never overlaps the dark footer).
  *
- * Visibility:
- *   The TOC is position:fixed in the right gutter, anchored to the
- *   container's right edge on wide viewports. It collapses to
- *   display:none below 1100px, so phones and most tablets see the
- *   article exactly as before.
+ * Behaviour:
+ *   1. Walk h2/h3 inside <article class="prose">.
+ *   2. Auto-id any heading missing one (slugified, deduped).
+ *   3. Number h2 entries 01, 02, ... in render order.
+ *   4. Track the heading nearest the top of the reading area and
+ *      highlight that row (text colour + accent dot).
+ *   5. Hide the rail entirely when there are zero headings.
  */
 ---
-<aside class="toc-wrap" aria-label="Table of contents" data-toc-empty>
+<aside class="toc-rail" aria-label="Table of contents" data-toc-empty>
   <nav class="toc">
     <p class="toc-label">목차</p>
-    <ul class="toc-list"></ul>
+    <ol class="toc-list"></ol>
   </nav>
 </aside>
 
 <script>
-  // Run after the DOM (and Astro's view transitions, if any) settles.
   const init = () => {
     const article = document.querySelector("article.prose");
-    const wrap = document.querySelector<HTMLElement>(".toc-wrap");
-    const list = document.querySelector<HTMLUListElement>(".toc-list");
+    const wrap = document.querySelector<HTMLElement>(".toc-rail");
+    const list = document.querySelector<HTMLOListElement>(".toc-list");
     if (!article || !wrap || !list) return;
 
-    // Reset (handles client-side navigation / re-init without dupes).
     list.innerHTML = "";
 
+    // We scan h1/h2/h3 inside article.prose. The post title's h1
+    // sits in <header class="post-header"> *outside* the article,
+    // so it's never picked up. Authors who write `#` for section
+    // headings (Obsidian default) see those used as top-level TOC
+    // entries; authors who write `##` get them as second-level.
     const headings = Array.from(
-      article.querySelectorAll<HTMLHeadingElement>("h2, h3"),
+      article.querySelectorAll<HTMLHeadingElement>("h1, h2, h3"),
     );
     if (headings.length === 0) {
       wrap.style.display = "none";
@@ -55,9 +59,6 @@
     wrap.removeAttribute("data-toc-empty");
     wrap.style.display = "";
 
-    // Slugify supports CJK by allowing all letters/numbers via Unicode
-    // property escapes. We strip combining marks first so accented
-    // Latin still produces clean anchors.
     const slugify = (text: string) => {
       const base = text
         .normalize("NFKD")
@@ -72,6 +73,7 @@
     type Item = { id: string; link: HTMLAnchorElement; el: HTMLHeadingElement };
     const items: Item[] = [];
     const used = new Set<string>();
+    let h2Index = 0;
 
     for (const h of headings) {
       let id = h.id;
@@ -79,12 +81,7 @@
         const base = slugify(h.textContent || "");
         let candidate = base;
         let n = 2;
-        while (used.has(candidate) || (candidate !== base && document.getElementById(candidate))) {
-          candidate = `${base}-${n++}`;
-        }
-        // If the *base* itself is already taken by another element on the page,
-        // bump until unique.
-        while (document.getElementById(candidate)) {
+        while (used.has(candidate) || document.getElementById(candidate)) {
           candidate = `${base}-${n++}`;
         }
         h.id = candidate;
@@ -92,23 +89,45 @@
       }
       used.add(id);
 
+      const tag = h.tagName.toLowerCase();
+      // Both h1 and h2 are treated as top-level entries (numbered);
+      // h3 is the subordinate level (em-dash instead of a number).
+      // We tag h1 as `toc-h2` in CSS terms so we don't have to
+      // duplicate the styles.
+      const isTop = tag === "h1" || tag === "h2";
       const li = document.createElement("li");
-      li.className = `toc-item toc-${h.tagName.toLowerCase()}`;
+      li.className = `toc-item ${isTop ? "toc-h2" : "toc-h3"}`;
+
       const a = document.createElement("a");
       a.href = `#${id}`;
-      a.textContent = h.textContent || "";
+
+      if (isTop) {
+        h2Index += 1;
+        const num = document.createElement("span");
+        num.className = "toc-num";
+        num.textContent = String(h2Index).padStart(2, "0");
+        a.appendChild(num);
+      } else {
+        const dash = document.createElement("span");
+        dash.className = "toc-dash";
+        dash.textContent = "—";
+        dash.setAttribute("aria-hidden", "true");
+        a.appendChild(dash);
+      }
+
+      const label = document.createElement("span");
+      label.className = "toc-text";
+      label.textContent = h.textContent || "";
+      a.appendChild(label);
+
       li.appendChild(a);
       list.appendChild(li);
-
       items.push({ id, link: a, el: h });
     }
 
-    // Active-section tracking.
-    // We compare each heading's top against a virtual "reading line" a bit
-    // below the topbar. The active heading is the last one that has crossed
-    // the line. This is more predictable than IntersectionObserver for
-    // jumpy heading densities (e.g., two h3s tightly stacked).
-    const READING_LINE = 120; // px below viewport top
+    // Active-section tracking — last heading whose top has crossed
+    // the "reading line" just below the topbar.
+    const READING_LINE = 120;
     let activeLink: HTMLAnchorElement | null = null;
 
     const update = () => {
@@ -118,7 +137,6 @@
         if (top - READING_LINE <= 0) chosen = it;
         else break;
       }
-      // Default to the first item before any heading has scrolled in.
       if (!chosen) chosen = items[0];
       if (chosen.link === activeLink) return;
       if (activeLink) activeLink.classList.remove("active");
@@ -126,7 +144,6 @@
       activeLink = chosen.link;
     };
 
-    // requestAnimationFrame throttling — scroll fires fast.
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
@@ -136,7 +153,6 @@
         ticking = false;
       });
     };
-
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     update();
@@ -149,84 +165,129 @@
   }
 </script>
 
-<style>
-  /* Fixed in the right gutter so the article stays exactly where it
-     was. The right offset uses max() so on viewports wider than the
-     container the TOC sticks to the container edge, and on narrower
-     ones it tucks against the viewport edge with a sane minimum. */
-  .toc-wrap {
-    position: fixed;
-    top: 120px;
-    right: max(24px, calc((100vw - 1240px) / 2 + 32px));
-    width: 220px;
-    max-height: calc(100vh - 160px);
-    overflow-y: auto;
-    z-index: 5;
-    /* Hide the scrollbar but keep scrolling functional. */
-    scrollbar-width: thin;
-    scrollbar-color: var(--line-soft) transparent;
-  }
-  .toc-wrap[data-toc-empty] { display: none; }
-  .toc-wrap::-webkit-scrollbar { width: 4px; }
-  .toc-wrap::-webkit-scrollbar-thumb {
-    background: var(--line-soft);
-    border-radius: 2px;
-  }
+<style is:global>
+  /* Scoped-to-class rather than scoped-by-Astro: elements inside the
+     TOC list are created at runtime by the script above (document.
+     createElement). Astro's scoped-CSS attribute is only applied to
+     template-declared elements, so dynamic children would otherwise
+     miss every selector here. The class names are unique to this
+     component, so going global doesn't risk collisions. */
 
+  /* The rail is parked in the right gutter of <main>. main is set to
+     position:relative in newsprint.css; this is absolute against it,
+     so it doesn't disturb the article's centered column. */
+  .toc-rail {
+    position: absolute;
+    top: 64px;          /* aligned with .post-header padding-top */
+    bottom: 0;
+    right: max(28px, calc((100vw - var(--container-max)) / 2 + var(--container-pad)));
+    width: 200px;
+    pointer-events: none;
+  }
+  /* The inner nav re-enables interactions and sticks while we scroll
+     within <main>. Once we reach the footer, sticky stops naturally. */
+  .toc-rail .toc {
+    position: sticky;
+    top: 110px;
+    pointer-events: auto;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    /* Quiet scrollbar — only visible on hover. */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .toc-rail .toc:hover { scrollbar-color: var(--line-soft) transparent; }
+  .toc-rail .toc::-webkit-scrollbar { width: 4px; }
+  .toc-rail .toc::-webkit-scrollbar-thumb { background: transparent; border-radius: 2px; }
+  .toc-rail .toc:hover::-webkit-scrollbar-thumb { background: var(--line-soft); }
+  .toc-rail[data-toc-empty] { display: none; }
+
+  /* Mono kicker — same language as the rest of the site's labels. */
   .toc-label {
     font-family: var(--mono);
     font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.22em;
     color: var(--muted);
-    margin: 0 0 12px;
-    padding-left: 12px;
+    margin: 0 0 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-soft);
   }
 
   .toc-list {
     list-style: none;
     margin: 0;
     padding: 0;
-    border-left: 1px solid var(--line-soft);
+    counter-reset: none;
   }
 
-  .toc-item {
-    margin: 0;
-    line-height: 1.4;
-  }
-  .toc-item + .toc-item { margin-top: 2px; }
+  .toc-item { margin: 0; }
+  .toc-item + .toc-item { margin-top: 10px; }
 
+  /* Each row is `<a>` containing a small mono index/dash and a serif
+     title. We use grid so the title aligns regardless of whether
+     the leading mark is two digits or an em-dash. */
   .toc-item a {
-    display: block;
-    padding: 4px 12px;
-    margin-left: -1px; /* overlap the parent border so .active's bar replaces it cleanly */
-    border-left: 1px solid transparent;
-    font-family: var(--sans);
-    font-size: 12.5px;
-    color: var(--muted);
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    align-items: baseline;
+    gap: 8px;
     text-decoration: none;
-    line-height: 1.45;
-    transition: color 0.12s, border-color 0.12s;
-    /* Truncate long headings in the rail rather than wrapping forever. */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: var(--muted);
+    transition: color 0.15s ease;
   }
   .toc-item a:hover { color: var(--ink); }
 
-  /* Indent h3 entries one step. */
-  .toc-h3 a { padding-left: 26px; font-size: 12px; }
-
-  .toc-item a.active {
-    color: var(--accent);
-    border-left-color: var(--accent);
-    font-weight: 500;
+  .toc-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--accent-bright);
+    /* Stick the number to the baseline of the title's first line. */
+    line-height: 1.6;
+    transition: color 0.15s ease;
   }
 
-  /* Hide entirely on small screens — phones and most tablets read
-     the article without the rail. The 1100px threshold leaves
-     enough gutter for the 220px rail plus breathing room. */
+  .toc-dash {
+    font-family: var(--serif);
+    font-size: 13px;
+    color: var(--muted);
+    text-align: right;
+    line-height: 1.55;
+  }
+
+  .toc-text {
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.45;
+    letter-spacing: -0.005em;
+    /* Wrap long headings cleanly across two lines instead of
+       ellipsizing — long Korean section titles read better wrapped. */
+    overflow-wrap: anywhere;
+  }
+
+  /* h3 entries: smaller, italic, deeper indent so they read as
+     children of the h2 above them. */
+  .toc-h3 a {
+    grid-template-columns: 22px 1fr;
+    padding-left: 14px;
+  }
+  .toc-h3 .toc-text {
+    font-size: 12.5px;
+    font-style: italic;
+    color: var(--muted);
+  }
+
+  /* Active row — colour-only signal (no border bar). The mono index
+     also gains the brand accent so the active row reads as a unit. */
+  .toc-item a.active .toc-text { color: var(--accent); font-weight: 500; }
+  .toc-item a.active .toc-num  { color: var(--accent); }
+  .toc-item a.active .toc-dash { color: var(--accent); }
+
+  /* Hide the rail below 1100px — there isn't enough gutter to host
+     a 200px column without crowding the article. */
   @media (max-width: 1099px) {
-    .toc-wrap { display: none !important; }
+    .toc-rail { display: none !important; }
   }
 </style>
