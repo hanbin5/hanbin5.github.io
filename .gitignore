@@ -25,3 +25,4 @@ yarn.lock
 # Misc
 *.log
 .cache/
+_test-*.mjs

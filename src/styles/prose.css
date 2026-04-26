@@ -87,6 +87,93 @@
   padding: 0.5em 0;
 }
 
+/* =====================================================================
+   Obsidian callouts
+   ---------------------------------------------------------------------
+   Markdown source `> [!type] Title` is rewritten by the remark plugin
+   into a div tree:
+
+     <div class="callout callout-<type>" data-callout="<type>">
+       <div class="callout-title">Title</div>
+       <div class="callout-body"> ...nested mdast → HTML... </div>
+     </div>
+
+   Each callout type pulls a colour through CSS custom properties so
+   adding a new variant is one rule, not three. The default (`note`) is
+   the brand blue used elsewhere on the site; everything else is named
+   after Obsidian's defaults so authoring in the vault stays muscle-
+   memory.
+   ===================================================================== */
+.prose .callout {
+  --callout-color: var(--accent);
+  --callout-bg: #eef3fb;
+  --callout-icon: "✎";
+
+  background: var(--callout-bg);
+  border-left: 4px solid var(--callout-color);
+  border-radius: 6px;
+  padding: 14px 18px 16px;
+  margin: 1.4em 0;
+  font-family: var(--serif);
+  font-style: normal;
+  color: var(--ink);
+}
+
+.prose .callout-title {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 0.95em;
+  color: var(--callout-color);
+  letter-spacing: -0.005em;
+  margin: 0 0 0.5em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.prose .callout-title::before {
+  content: var(--callout-icon);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  font-size: 0.95em;
+  line-height: 1;
+}
+
+.prose .callout-body { margin: 0; }
+.prose .callout-body > *:first-child { margin-top: 0; }
+.prose .callout-body > *:last-child { margin-bottom: 0; }
+.prose .callout-body > * + * { margin-top: 0.9em; }
+
+/* Per-type colour and icon. Add new types here. */
+.prose .callout-note     { --callout-color: var(--accent);        --callout-bg: #eef3fb; --callout-icon: "✎"; }
+.prose .callout-info     { --callout-color: #2e7fe3;              --callout-bg: #e8f1fc; --callout-icon: "ⓘ"; }
+.prose .callout-tip,
+.prose .callout-hint     { --callout-color: #00aab2;              --callout-bg: #e6f8f9; --callout-icon: "✦"; }
+.prose .callout-success,
+.prose .callout-check,
+.prose .callout-done     { --callout-color: #1e9d61;              --callout-bg: #e8f6ee; --callout-icon: "✓"; }
+.prose .callout-question,
+.prose .callout-help,
+.prose .callout-faq      { --callout-color: #c98a00;              --callout-bg: #fbf2dd; --callout-icon: "?"; }
+.prose .callout-warning,
+.prose .callout-caution,
+.prose .callout-attention{ --callout-color: #c98a00;              --callout-bg: #fbf2dd; --callout-icon: "⚠"; }
+.prose .callout-failure,
+.prose .callout-fail,
+.prose .callout-missing,
+.prose .callout-danger,
+.prose .callout-error,
+.prose .callout-bug      { --callout-color: var(--danger);        --callout-bg: #fdecee; --callout-icon: "✕"; }
+.prose .callout-example  { --callout-color: #7a3fbe;              --callout-bg: #f1eafa; --callout-icon: "❋"; }
+.prose .callout-quote,
+.prose .callout-cite     { --callout-color: var(--cau-gray);      --callout-bg: #f1f1f3; --callout-icon: "❝"; }
+.prose .callout-abstract,
+.prose .callout-summary,
+.prose .callout-tldr     { --callout-color: #00798c;              --callout-bg: #e3f1f4; --callout-icon: "≡"; }
+.prose .callout-todo     { --callout-color: #2e7fe3;              --callout-bg: #e8f1fc; --callout-icon: "☐"; }
+
 /* Post header (above the body). Both top and bottom borders are
    constrained to 68ch so they match the text column exactly.
    The brand itself now lives in the TopBar, so no extra block is needed. */

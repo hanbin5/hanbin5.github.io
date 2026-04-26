@@ -5,13 +5,14 @@
   "private": true,
   "description": "HANBIN — A Journal. Personal magazine-style blog with Obsidian → Astro pipeline.",
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
+    "dev": "node scripts/normalize-content.mjs && astro dev",
+    "start": "node scripts/normalize-content.mjs && astro dev",
+    "prebuild": "node scripts/normalize-content.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "sync": "bash scripts/sync-from-vault.sh",
-    "sync:dev": "bash scripts/sync-from-vault.sh && astro dev"
+    "sync": "bash scripts/sync-from-vault.sh && node scripts/normalize-content.mjs",
+    "sync:dev": "bash scripts/sync-from-vault.sh && node scripts/normalize-content.mjs && astro dev"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.18",
