@@ -2,29 +2,29 @@
 /**
  * TableOfContents — magazine-style margin annotation for posts.
  *
- * Visual language:
- *   The site's section heads use a small mono number kicker ("01 — ")
- *   alongside a serif title. The TOC borrows the exact same pattern:
- *   small muted mono index, serif title, fine and quiet. h3 entries
- *   drop the number (they're sub-sections of the parent h2) and shift
- *   right with a small italic dash, the way classical print TOCs
- *   express subordinate entries.
+ * Hierarchy:
+ *   h1 → top level: small mono number ("01", "02", ...) + serif title.
+ *   h2 → second level: indented one step, dot marker, smaller text.
+ *   h3 → third level: indented two steps, em-dash marker, italic.
+ *   The three levels are visually distinct so a post that mixes
+ *   `#`, `##`, `###` reads as a proper outline.
  *
- * Layout language:
- *   The article stays *exactly* where it has always been — perfectly
+ * Layout:
+ *   The article stays exactly where it has always been — perfectly
  *   centered in the page chrome. The rail is absolutely positioned
  *   inside <main> (which is set position:relative in newsprint.css),
  *   so it occupies the right gutter without disturbing the article's
  *   centering. The inner <nav> uses position:sticky so it pins while
- *   the reader scrolls, and naturally stops at the bottom of <main>
- *   (i.e., never overlaps the dark footer).
+ *   the reader scrolls; once we reach the footer, sticky stops
+ *   naturally — no overlap with the dark band.
  *
- * Behaviour:
- *   1. Walk h2/h3 inside <article class="prose">.
- *   2. Auto-id any heading missing one (slugified, deduped).
- *   3. Number h2 entries 01, 02, ... in render order.
+ * Behavior:
+ *   1. Walk h1/h2/h3 inside <article class="prose">. The post-title
+ *      h1 lives outside .prose so it isn't picked up.
+ *   2. Auto-id any heading missing one (slug + dedupe).
+ *   3. Number h1 entries 01, 02, ... in order.
  *   4. Track the heading nearest the top of the reading area and
- *      highlight that row (text colour + accent dot).
+ *      highlight that row.
  *   5. Hide the rail entirely when there are zero headings.
  */
 ---
@@ -44,11 +44,6 @@
 
     list.innerHTML = "";
 
-    // We scan h1/h2/h3 inside article.prose. The post title's h1
-    // sits in <header class="post-header"> *outside* the article,
-    // so it's never picked up. Authors who write `#` for section
-    // headings (Obsidian default) see those used as top-level TOC
-    // entries; authors who write `##` get them as second-level.
     const headings = Array.from(
       article.querySelectorAll<HTMLHeadingElement>("h1, h2, h3"),
     );
@@ -73,7 +68,7 @@
     type Item = { id: string; link: HTMLAnchorElement; el: HTMLHeadingElement };
     const items: Item[] = [];
     const used = new Set<string>();
-    let h2Index = 0;
+    let h1Index = 0;
 
     for (const h of headings) {
       let id = h.id;
@@ -90,30 +85,30 @@
       used.add(id);
 
       const tag = h.tagName.toLowerCase();
-      // Both h1 and h2 are treated as top-level entries (numbered);
-      // h3 is the subordinate level (em-dash instead of a number).
-      // We tag h1 as `toc-h2` in CSS terms so we don't have to
-      // duplicate the styles.
-      const isTop = tag === "h1" || tag === "h2";
       const li = document.createElement("li");
-      li.className = `toc-item ${isTop ? "toc-h2" : "toc-h3"}`;
+      li.className = `toc-item toc-${tag}`;
 
       const a = document.createElement("a");
       a.href = `#${id}`;
 
-      if (isTop) {
-        h2Index += 1;
-        const num = document.createElement("span");
-        num.className = "toc-num";
-        num.textContent = String(h2Index).padStart(2, "0");
-        a.appendChild(num);
+      // Leading mark: number for h1, dot for h2, em-dash for h3.
+      // All three levels share the same 22px-wide mark column so the
+      // titles align in a clean vertical line regardless of level.
+      const mark = document.createElement("span");
+      if (tag === "h1") {
+        h1Index += 1;
+        mark.className = "toc-num";
+        mark.textContent = String(h1Index).padStart(2, "0");
+      } else if (tag === "h2") {
+        mark.className = "toc-marker toc-marker-dot";
+        mark.textContent = "·";
+        mark.setAttribute("aria-hidden", "true");
       } else {
-        const dash = document.createElement("span");
-        dash.className = "toc-dash";
-        dash.textContent = "—";
-        dash.setAttribute("aria-hidden", "true");
-        a.appendChild(dash);
+        mark.className = "toc-marker toc-marker-dash";
+        mark.textContent = "—";
+        mark.setAttribute("aria-hidden", "true");
       }
+      a.appendChild(mark);
 
       const label = document.createElement("span");
       label.className = "toc-text";
@@ -125,7 +120,7 @@
       items.push({ id, link: a, el: h });
     }
 
-    // Active-section tracking — last heading whose top has crossed
+    // Active-section tracking: last heading whose top has crossed
     // the "reading line" just below the topbar.
     const READING_LINE = 120;
     let activeLink: HTMLAnchorElement | null = null;
@@ -166,33 +161,28 @@
 </script>
 
 <style is:global>
-  /* Scoped-to-class rather than scoped-by-Astro: elements inside the
-     TOC list are created at runtime by the script above (document.
-     createElement). Astro's scoped-CSS attribute is only applied to
-     template-declared elements, so dynamic children would otherwise
-     miss every selector here. The class names are unique to this
-     component, so going global doesn't risk collisions. */
+  /* Why is:global — the script creates the <li>/<a>/<span> rows at
+     runtime via document.createElement(). Astro's scoped-CSS
+     attribute is only stamped onto template-declared elements, so
+     scoped selectors would miss every dynamic child. The class
+     names are unique to this component, so going global is safe. */
 
-  /* The rail is parked in the right gutter of <main>. main is set to
-     position:relative in newsprint.css; this is absolute against it,
-     so it doesn't disturb the article's centered column. */
   .toc-rail {
     position: absolute;
     top: 64px;          /* aligned with .post-header padding-top */
     bottom: 0;
+    /* Push the rail flush with the right edge of the page chrome.
+       max() keeps a sane minimum on narrower viewports. */
     right: max(28px, calc((100vw - var(--container-max)) / 2 + var(--container-pad)));
     width: 200px;
     pointer-events: none;
   }
-  /* The inner nav re-enables interactions and sticks while we scroll
-     within <main>. Once we reach the footer, sticky stops naturally. */
   .toc-rail .toc {
     position: sticky;
     top: 110px;
     pointer-events: auto;
     max-height: calc(100vh - 140px);
     overflow-y: auto;
-    /* Quiet scrollbar — only visible on hover. */
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
   }
@@ -202,7 +192,11 @@
   .toc-rail .toc:hover::-webkit-scrollbar-thumb { background: var(--line-soft); }
   .toc-rail[data-toc-empty] { display: none; }
 
-  /* Mono kicker — same language as the rest of the site's labels. */
+  /* Mono kicker. No border-bottom — earlier we had a thin rule
+     here, but at common viewport widths it lined up vertically with
+     the prose h2 border-bottom in the article column, making them
+     read as a single very long line crossing the page. Whitespace
+     alone separates the label from the entries cleanly. */
   .toc-label {
     font-family: var(--mono);
     font-size: 10px;
@@ -210,8 +204,6 @@
     letter-spacing: 0.22em;
     color: var(--muted);
     margin: 0 0 18px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--line-soft);
   }
 
   .toc-list {
@@ -220,18 +212,17 @@
     padding: 0;
     counter-reset: none;
   }
-
   .toc-item { margin: 0; }
-  .toc-item + .toc-item { margin-top: 10px; }
+  .toc-item + .toc-item { margin-top: 8px; }
 
-  /* Each row is `<a>` containing a small mono index/dash and a serif
-     title. We use grid so the title aligns regardless of whether
-     the leading mark is two digits or an em-dash. */
+  /* Each row is `<a><span mark/><span text/></a>`. We grid the row
+     so titles always align on a fixed mark column, regardless of
+     whether the mark is a 2-digit number or a single dot. */
   .toc-item a {
     display: grid;
     grid-template-columns: 22px 1fr;
     align-items: baseline;
-    gap: 8px;
+    gap: 10px;
     text-decoration: none;
     color: var(--muted);
     transition: color 0.15s ease;
@@ -243,51 +234,47 @@
     font-size: 10px;
     letter-spacing: 0.08em;
     color: var(--accent-bright);
-    /* Stick the number to the baseline of the title's first line. */
-    line-height: 1.6;
+    line-height: 1.55;
     transition: color 0.15s ease;
   }
-
-  .toc-dash {
+  .toc-marker {
     font-family: var(--serif);
-    font-size: 13px;
-    color: var(--muted);
+    color: var(--line-soft);
     text-align: right;
     line-height: 1.55;
   }
+  .toc-marker-dot  { font-size: 16px; }
+  .toc-marker-dash { font-size: 12px; }
 
   .toc-text {
     font-family: var(--serif);
-    font-size: 14px;
     font-weight: 400;
     line-height: 1.45;
     letter-spacing: -0.005em;
-    /* Wrap long headings cleanly across two lines instead of
-       ellipsizing — long Korean section titles read better wrapped. */
     overflow-wrap: anywhere;
   }
 
-  /* h3 entries: smaller, italic, deeper indent so they read as
-     children of the h2 above them. */
-  .toc-h3 a {
-    grid-template-columns: 22px 1fr;
-    padding-left: 14px;
-  }
-  .toc-h3 .toc-text {
-    font-size: 12.5px;
-    font-style: italic;
-    color: var(--muted);
-  }
+  /* === Three hierarchy levels === */
 
-  /* Active row — colour-only signal (no border bar). The mono index
-     also gains the brand accent so the active row reads as a unit. */
-  .toc-item a.active .toc-text { color: var(--accent); font-weight: 500; }
-  .toc-item a.active .toc-num  { color: var(--accent); }
-  .toc-item a.active .toc-dash { color: var(--accent); }
+  /* h1: top level — numbered, full-size title, no extra indent. */
+  .toc-h1 .toc-text { font-size: 14px; color: var(--ink); }
 
-  /* Hide the rail below 1100px — there isn't enough gutter to host
+  /* h2: second level — indented one step, smaller, muted. */
+  .toc-h2 a { padding-left: 16px; }
+  .toc-h2 .toc-text { font-size: 13px; color: var(--muted); }
+
+  /* h3: third level — indented two steps, italic, smaller still. */
+  .toc-h3 a { padding-left: 32px; }
+  .toc-h3 .toc-text { font-size: 12.5px; font-style: italic; color: var(--muted); }
+
+  /* Active row — colour-only, applied to all three levels. */
+  .toc-item a.active .toc-text   { color: var(--accent); font-weight: 500; }
+  .toc-item a.active .toc-num    { color: var(--accent); }
+  .toc-item a.active .toc-marker { color: var(--accent); }
+
+  /* Hide the rail below 1200px — there isn't enough gutter to host
      a 200px column without crowding the article. */
-  @media (max-width: 1099px) {
+  @media (max-width: 1199px) {
     .toc-rail { display: none !important; }
   }
 </style>

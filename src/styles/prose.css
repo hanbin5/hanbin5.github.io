@@ -44,6 +44,13 @@
 .prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .prose a:hover { color: var(--accent-bright); }
 
+/* Force a real bold for `**bold**` and <b>. The body weight is 300,
+   and the browser's UA stylesheet maps <strong> to `font-weight:
+   bolder` — relative-bolder against 300 computes to 400, not 700,
+   which makes inline emphasis visually indistinguishable from the
+   surrounding body. Explicit weight fixes that. */
+.prose strong, .prose b { font-weight: 700; }
+
 .prose blockquote {
   border-left: 3px solid var(--accent);
   padding: 0.2em 0 0.2em 1.2em;
