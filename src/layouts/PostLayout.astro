@@ -6,6 +6,7 @@
 import BaseHead from "./BaseHead.astro";
 import TopBar from "../components/TopBar.astro";
 import Footer from "../components/Footer.astro";
+import TableOfContents from "../components/TableOfContents.astro";
 
 import "../styles/tokens.css";
 import "../styles/newsprint.css";
@@ -56,6 +57,8 @@ const plainTitle = title.replace(/<[^>]+>/g, "");
       </article>
     </div>
   </main>
+
+  <TableOfContents />
 
   <Footer />
 </body>

@@ -1,0 +1,232 @@
+---
+/**
+ * TableOfContents — Notion-style sticky TOC for individual posts.
+ *
+ * Why client-side?
+ *   The page's headings are rendered from MDX via Astro's content
+ *   pipeline. Pulling them out at build time would mean parsing the
+ *   compiled HTML in PostLayout.astro and threading slugs through;
+ *   doing the work in the browser keeps the layout pipeline untouched
+ *   and lets us reuse the *exact* DOM the reader sees (so anchor IDs
+ *   line up automatically with the headings the user is reading).
+ *
+ * Behavior:
+ *   1. After load, scan `<article class="prose">` for h2 and h3.
+ *   2. Auto-assign `id`s (slugified, deduped) to any heading that
+ *      doesn't already have one.
+ *   3. Build a flat list of links; h3s are visually indented.
+ *   4. Track the heading currently at the top of the reading area
+ *      and highlight its link (Notion-style).
+ *   5. Hide the whole component if there are zero headings, so we
+ *      don't leave an empty rail floating in the gutter.
+ *
+ * Visibility:
+ *   The TOC is position:fixed in the right gutter, anchored to the
+ *   container's right edge on wide viewports. It collapses to
+ *   display:none below 1100px, so phones and most tablets see the
+ *   article exactly as before.
+ */
+---
+<aside class="toc-wrap" aria-label="Table of contents" data-toc-empty>
+  <nav class="toc">
+    <p class="toc-label">목차</p>
+    <ul class="toc-list"></ul>
+  </nav>
+</aside>
+
+<script>
+  // Run after the DOM (and Astro's view transitions, if any) settles.
+  const init = () => {
+    const article = document.querySelector("article.prose");
+    const wrap = document.querySelector<HTMLElement>(".toc-wrap");
+    const list = document.querySelector<HTMLUListElement>(".toc-list");
+    if (!article || !wrap || !list) return;
+
+    // Reset (handles client-side navigation / re-init without dupes).
+    list.innerHTML = "";
+
+    const headings = Array.from(
+      article.querySelectorAll<HTMLHeadingElement>("h2, h3"),
+    );
+    if (headings.length === 0) {
+      wrap.style.display = "none";
+      return;
+    }
+    wrap.removeAttribute("data-toc-empty");
+    wrap.style.display = "";
+
+    // Slugify supports CJK by allowing all letters/numbers via Unicode
+    // property escapes. We strip combining marks first so accented
+    // Latin still produces clean anchors.
+    const slugify = (text: string) => {
+      const base = text
+        .normalize("NFKD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase()
+        .replace(/[^\p{Letter}\p{Number}\s-]+/gu, "")
+        .trim()
+        .replace(/\s+/g, "-");
+      return base || "section";
+    };
+
+    type Item = { id: string; link: HTMLAnchorElement; el: HTMLHeadingElement };
+    const items: Item[] = [];
+    const used = new Set<string>();
+
+    for (const h of headings) {
+      let id = h.id;
+      if (!id) {
+        const base = slugify(h.textContent || "");
+        let candidate = base;
+        let n = 2;
+        while (used.has(candidate) || (candidate !== base && document.getElementById(candidate))) {
+          candidate = `${base}-${n++}`;
+        }
+        // If the *base* itself is already taken by another element on the page,
+        // bump until unique.
+        while (document.getElementById(candidate)) {
+          candidate = `${base}-${n++}`;
+        }
+        h.id = candidate;
+        id = candidate;
+      }
+      used.add(id);
+
+      const li = document.createElement("li");
+      li.className = `toc-item toc-${h.tagName.toLowerCase()}`;
+      const a = document.createElement("a");
+      a.href = `#${id}`;
+      a.textContent = h.textContent || "";
+      li.appendChild(a);
+      list.appendChild(li);
+
+      items.push({ id, link: a, el: h });
+    }
+
+    // Active-section tracking.
+    // We compare each heading's top against a virtual "reading line" a bit
+    // below the topbar. The active heading is the last one that has crossed
+    // the line. This is more predictable than IntersectionObserver for
+    // jumpy heading densities (e.g., two h3s tightly stacked).
+    const READING_LINE = 120; // px below viewport top
+    let activeLink: HTMLAnchorElement | null = null;
+
+    const update = () => {
+      let chosen: Item | null = null;
+      for (const it of items) {
+        const top = it.el.getBoundingClientRect().top;
+        if (top - READING_LINE <= 0) chosen = it;
+        else break;
+      }
+      // Default to the first item before any heading has scrolled in.
+      if (!chosen) chosen = items[0];
+      if (chosen.link === activeLink) return;
+      if (activeLink) activeLink.classList.remove("active");
+      chosen.link.classList.add("active");
+      activeLink = chosen.link;
+    };
+
+    // requestAnimationFrame throttling — scroll fires fast.
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        update();
+        ticking = false;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    update();
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+</script>
+
+<style>
+  /* Fixed in the right gutter so the article stays exactly where it
+     was. The right offset uses max() so on viewports wider than the
+     container the TOC sticks to the container edge, and on narrower
+     ones it tucks against the viewport edge with a sane minimum. */
+  .toc-wrap {
+    position: fixed;
+    top: 120px;
+    right: max(24px, calc((100vw - 1240px) / 2 + 32px));
+    width: 220px;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+    z-index: 5;
+    /* Hide the scrollbar but keep scrolling functional. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-soft) transparent;
+  }
+  .toc-wrap[data-toc-empty] { display: none; }
+  .toc-wrap::-webkit-scrollbar { width: 4px; }
+  .toc-wrap::-webkit-scrollbar-thumb {
+    background: var(--line-soft);
+    border-radius: 2px;
+  }
+
+  .toc-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin: 0 0 12px;
+    padding-left: 12px;
+  }
+
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--line-soft);
+  }
+
+  .toc-item {
+    margin: 0;
+    line-height: 1.4;
+  }
+  .toc-item + .toc-item { margin-top: 2px; }
+
+  .toc-item a {
+    display: block;
+    padding: 4px 12px;
+    margin-left: -1px; /* overlap the parent border so .active's bar replaces it cleanly */
+    border-left: 1px solid transparent;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--muted);
+    text-decoration: none;
+    line-height: 1.45;
+    transition: color 0.12s, border-color 0.12s;
+    /* Truncate long headings in the rail rather than wrapping forever. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .toc-item a:hover { color: var(--ink); }
+
+  /* Indent h3 entries one step. */
+  .toc-h3 a { padding-left: 26px; font-size: 12px; }
+
+  .toc-item a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* Hide entirely on small screens — phones and most tablets read
+     the article without the rail. The 1100px threshold leaves
+     enough gutter for the 220px rail plus breathing room. */
+  @media (max-width: 1099px) {
+    .toc-wrap { display: none !important; }
+  }
+</style>

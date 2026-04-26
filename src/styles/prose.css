@@ -28,6 +28,10 @@
   line-height: 1.2;
   margin-top: 2em;
   margin-bottom: 0.6em;
+  /* When a TOC link jumps to a heading we don't want it to slide
+     under the (semi-fixed) topbar. The value matches the topbar's
+     visible height + a small gap. */
+  scroll-margin-top: 80px;
 }
 
 /* The first child of the article shouldn't carry the 2em top margin —
