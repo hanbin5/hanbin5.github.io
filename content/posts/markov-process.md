@@ -42,5 +42,5 @@ Answer is yes, it can do. If you run expectimaxs at every state, you get an acti
 2. Expectimax returns only the best action at the root state — one query, one answer. Value Iteration computes $V(s)$ for all states at once, so we can extract a policy $\pi(s)$ for every state from a single run.
 3. MDPs often have no terminal state and contain cycles, so the expectimax tree never bottoms out. Value Iteration handles this naturally by iterating $V(s)$ on a finite state table until convergence.
 ## MDP Search Trees
-![Pasted image 20260427112217](/attachments/Pasted image 20260427112217.png)
+![Pasted image 20260427112217](/attachments/Pasted%20image%2020260427112217.png)
 

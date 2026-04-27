@@ -24,6 +24,7 @@ import { readdir, readFile, writeFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fixObsidianMath } from "../src/plugins/remark-obsidian-math.mjs";
+import { fixImageUrls } from "../src/plugins/normalize-image-urls.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const POSTS_DIR = join(ROOT, "content", "posts");
@@ -56,11 +57,15 @@ async function main() {
   let touched = 0;
   for (const file of files) {
     const before = await readFile(file, "utf8");
-    const after = fixObsidianMath(before);
+    // Order matters: math reflow is whitespace-sensitive and operates on
+    // its own delimiters, while image-URL encoding only touches the
+    // characters inside ![…](…). Running math first keeps the file in a
+    // shape image-URL encoding can reason about per-line.
+    const after = fixImageUrls(fixObsidianMath(before));
     if (after !== before) {
       await writeFile(file, after);
       touched++;
-      console.log(`[normalize-content] reflowed math in ${file.replace(ROOT + "/", "")}`);
+      console.log(`[normalize-content] normalised ${file.replace(ROOT + "/", "")}`);
     }
   }
   console.log(
