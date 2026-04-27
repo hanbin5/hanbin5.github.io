@@ -35,5 +35,10 @@ It means that $s_t$ contains all informations of $s_t, \dots, s_1$.
 Our goal is an **optimal policy** $\pi^*: S \to A$. 
 It means a policy $\pi$ gives an action for each state, i.e., $\pi(s) = a$.
 
+> Then, did expectimax compute a policy?
 
+Answer is yes, it can do. If you run expectimaxs at every state, you get an action for each state. But, this is inefficient since
+1. Expectimax doesn't exploit the Markov assumption - it treats the same state on different paths as different nodes. This causes redundant computation.
+2. Expectimax returns only the best action at the root state — one query, one answer. Value Iteration computes $V(s)$ for all states at once, so we can extract a policy $\pi(s)$ for every state from a single run.
+3. MDPs often have no terminal state and contain cycles, so the expectimax tree never bottoms out. Value Iteration handles this naturally by iterating V(s) on a finite state table until convergence.
 
