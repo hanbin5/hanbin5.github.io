@@ -1,0 +1,65 @@
+---
+import JournalLayout from "../layouts/JournalLayout.astro";
+import CalendarEmbed from "../components/CalendarEmbed.astro";
+---
+<JournalLayout
+  title="Calendar — HANBIN"
+  description="한빈(Hanbin) · 일정 (Free/Busy)"
+>
+  <section class="calendar-page">
+    <div class="container">
+      <div class="calendar-head">
+        <div class="kicker">§ Schedule</div>
+        <h1>Calendar</h1>
+        <p class="lede">
+          모든 개인 캘린더를 하나로 합쳐 보여줍니다. 일정 제목이나 내용은
+          공개되지 않고, 비어있는 시간과 <strong>바쁨(Busy)</strong> 블록만
+          표시됩니다.
+        </p>
+      </div>
+
+      <CalendarEmbed />
+    </div>
+  </section>
+</JournalLayout>
+
+<style>
+  .calendar-page {
+    padding: 56px 0 96px;
+  }
+
+  .calendar-head {
+    max-width: 960px;
+    margin: 0 auto 40px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .calendar-head .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent-bright);
+    margin-bottom: 14px;
+  }
+  .calendar-head h1 {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: clamp(40px, 5vw, 64px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 18px;
+  }
+  .calendar-head .lede {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(16px, 1.6vw, 18px);
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+  .calendar-head .lede strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+</style>
