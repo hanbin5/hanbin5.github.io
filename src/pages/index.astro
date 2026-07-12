@@ -1,158 +1,20 @@
 ---
 import JournalLayout from "../layouts/JournalLayout.astro";
-import HeroStory from "../components/HeroStory.astro";
-import EditorBand from "../components/EditorBand.astro";
-import {
-  getPublishedPosts,
-  buildRankById,
-  longDate,
-  postHref,
-  postNumber,
-  plural,
-} from "../lib/posts";
-import type { Post } from "../lib/posts";
-
-/**
- * Home page — Kanban + Timeline.
- *
- * Two simultaneous views of the same corpus:
- *   § 01  Projects Board — cards grouped by project (tag), newest on top.
- *   § 02  The Archive    — one long chronological list.
- *
- * Each post lives in its PRIMARY project — tags[0]. A post with multiple
- * tags appears once on the kanban (under its first tag) but matches any
- * of its tags on the archive's Project filter.
- *
- * When a post has no tags, it lands in an "(unclassified)" column so it
- * doesn't silently disappear from the home page.
- */
-const posts = await getPublishedPosts();
-const totalPosts = posts.length;
-
-const rankById = buildRankById(posts);
-
-const hero = posts[0];
-
-// ---- Scaling knobs ----
-// Per-column card cap. Above this, we show the N most recent plus a
-// "+more" link that deep-links to /archive with the project filter
-// pre-activated. Tune here as the site grows.
-const CARDS_PER_COLUMN = 5;
-
-// (Future — Tier 2) Hide projects inactive beyond this many days.
-// Currently unused; active projects only show when this gets enforced.
-// const ACTIVITY_WINDOW_DAYS = 180;
-
-// ---- Build the Kanban board ----
-const UNCLASSIFIED = "(unclassified)";
-const projectMap = new Map<string, Post[]>();
-posts.forEach((p) => {
-  const primary = p.data.tags[0] ?? UNCLASSIFIED;
-  if (!projectMap.has(primary)) projectMap.set(primary, []);
-  projectMap.get(primary)!.push(p);
-});
-// Columns sorted: by post count desc, then alphabetically. Unclassified always last.
-const projects = [...projectMap.entries()]
-  .sort((a, b) => {
-    if (a[0] === UNCLASSIFIED) return 1;
-    if (b[0] === UNCLASSIFIED) return -1;
-    return b[1].length - a[1].length || a[0].localeCompare(b[0]);
-  })
-  .map(([tag, items]) => ({ tag, posts: items }));
-
-// `issue` is shown on the masthead only when the cover story carries
-// one in its frontmatter. Empty journals don't get a fake "Vol. II ·
-// No. 04" — Masthead renders nothing for that line if `issue` is
-// undefined, which reads as honest rather than as a stub.
-const issueLabel = hero?.data.issue
-  ? `Vol. II · No. ${String(hero.data.issue).padStart(2, "0")}`
-  : undefined;
+import CalendarEmbed from "../components/CalendarEmbed.astro";
 ---
 <JournalLayout
   title="HANBIN — A Journal"
   description="정리 중인 생각을 위한 작은 공간."
-  issue={issueLabel}
-  essayCount={totalPosts}
 >
-  {hero && (
-    <HeroStory
-      category={hero.data.category.toUpperCase()}
-      headline={hero.data.title}
-      deck={hero.data.dek}
-      readTime={hero.data.readtime}
-      date={longDate(hero.data.date)}
-      href={postHref(hero)}
-    />
-  )}
-
-  <EditorBand />
-
-  <!-- ================= Projects Board (Kanban) ================= -->
-  <section class="kanban-section" id="projects">
+  <section class="home-calendar">
     <div class="container">
-      <div class="section-head">
-        <h2><span class="num">§ 01</span>Projects Board</h2>
-        <div class="rule"></div>
-        <div class="count">{plural(projects.length, "project")} · {plural(totalPosts, "entry", "entries")}</div>
-      </div>
-
-      <div class="kanban-board">
-        {projects.map((col) => (
-          <div class="kanban-column">
-            <div class="kanban-header">
-              <span class="kanban-title">{col.tag}</span>
-              <span class="kanban-count">{col.posts.length}</span>
-            </div>
-            <div class="kanban-cards">
-              {col.posts.slice(0, CARDS_PER_COLUMN).map((p) => (
-                <a class="kanban-card" href={postHref(p)}>
-                  <div class="card-meta">
-                    <span class="card-date">{longDate(p.data.date)}</span>
-                    <span class="card-num">{postNumber(p, rankById.get(p.id) ?? 0)}</span>
-                  </div>
-                  <h4 class="card-title" set:html={p.data.title}></h4>
-                  {p.data.dek && <p class="card-dek">{p.data.dek}</p>}
-                  <div class="card-foot">
-                    <span class="card-cat">{p.data.category}</span>
-                    {p.data.readtime && <span class="card-read">{p.data.readtime}</span>}
-                  </div>
-                </a>
-              ))}
-              {col.posts.length > CARDS_PER_COLUMN && (
-                <a
-                  class="kanban-more"
-                  href={`/archive?tag=${encodeURIComponent(col.tag)}`}
-                >
-                  +{col.posts.length - CARDS_PER_COLUMN} more in this project
-                </a>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= Archive Preview (Timeline) ================= -->
-  <section class="archive" id="archive-preview">
-    <div class="container">
-      <div class="section-head">
-        <h2><span class="num">§ 02</span>The Archive</h2>
-        <div class="rule"></div>
-        <div class="count"><a href="/archive">전체 보기 →</a></div>
-      </div>
-
-      <div class="archive-list">
-        {posts.slice(0, 8).map((p) => (
-          <a class="archive-row" href={postHref(p)} data-tags={JSON.stringify(p.data.tags)}>
-            <span class="idx">{postNumber(p, rankById.get(p.id) ?? 0)}</span>
-            <span class="date">{longDate(p.data.date)}</span>
-            <span class="title" set:html={p.data.title}></span>
-            <span class="cat">{p.data.category}</span>
-            <span class="read">{p.data.readtime ?? ""}</span><!-- empty span keeps the grid columns aligned -->
-          </a>
-        ))}
-      </div>
+      <CalendarEmbed />
     </div>
   </section>
 </JournalLayout>
+
+<style>
+  .home-calendar {
+    padding: 56px 0 96px;
+  }
+</style>

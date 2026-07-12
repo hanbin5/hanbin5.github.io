@@ -1,41 +1,6 @@
 ---
 import JournalLayout from "../layouts/JournalLayout.astro";
-
-/**
- * Calendar — embeds the author's Google Calendar as-is (Google's own
- * UI, not a re-implementation). All source calendars are merged into
- * one view and shown as plain "Busy" blocks; the underlying calendars
- * must be shared as "See only free/busy (hide details)" in Google
- * Calendar's own sharing settings for that to hold — this page has no
- * control over what Google serves, it only assembles the embed URL.
- */
-const CALENDAR_IDS = [
-  "hanbinftr55@gmail.com",
-  // Canvas (LMS import calendar) intentionally excluded — it's a
-  // subscribed, not owned, calendar, so its sharing/free-busy setting
-  // can't be changed here and it would leak assignment titles.
-  "c86a6a8b7a46e3174a955a50c8ba05ec26ec10185f62e15e53ed443c3b564abb@group.calendar.google.com", // CCC
-  "8e2948ab368f4fc60927999501abc9005ec03550c0d5c269a9c1394b0d576b84@group.calendar.google.com", // Graduation
-  "6693fcf66ff8ddd373b0723cb01a24a53ce7f208c76e6ad51b1734bc49c5bec0@group.calendar.google.com", // 알바
-  "d929d9115e0f0776fa3258bdc46892f1b17b8fd9ad2ed20859e409aef0dd3a52@group.calendar.google.com", // Coursework
-  "456b0854d1a9cde1a1404120126de1978b21c6f4f07b578b51dd4af84a0099e4@group.calendar.google.com", // Soul
-  "a83e413738104699b24c7fdc05a0cc7d75c3d6556c8f5832337e9e6b059ecacb@group.calendar.google.com", // Church
-  "ko.south_korea#holiday@group.v.calendar.google.com", // 대한민국의 휴일
-];
-
-const params = new URLSearchParams();
-CALENDAR_IDS.forEach((id) => params.append("src", id));
-params.set("ctz", "Asia/Seoul");
-params.set("mode", "WEEK");
-params.set("wkst", "2"); // week starts Monday
-params.set("showTitle", "0");
-params.set("showCalendars", "0"); // hides the per-calendar name list (Church, 알바, ...)
-params.set("showTz", "0");
-params.set("showPrint", "0");
-params.set("showTabs", "1");
-params.set("bgcolor", "%23ffffff");
-
-const embedSrc = `https://calendar.google.com/calendar/embed?${params.toString()}`;
+import CalendarEmbed from "../components/CalendarEmbed.astro";
 ---
 <JournalLayout
   title="Calendar — HANBIN"
@@ -53,17 +18,7 @@ const embedSrc = `https://calendar.google.com/calendar/embed?${params.toString()
         </p>
       </div>
 
-      <div class="calendar-embed">
-        <iframe
-          src={embedSrc}
-          style="border:0"
-          width="100%"
-          height="700"
-          frameborder="0"
-          scrolling="no"
-          title="Hanbin's Calendar"
-        ></iframe>
-      </div>
+      <CalendarEmbed />
     </div>
   </section>
 </JournalLayout>
@@ -106,21 +61,5 @@ const embedSrc = `https://calendar.google.com/calendar/embed?${params.toString()
   .calendar-head .lede strong {
     color: var(--ink);
     font-weight: 600;
-  }
-
-  .calendar-embed {
-    border: 1px solid var(--line-soft);
-    overflow: hidden;
-    background: var(--paper);
-  }
-  .calendar-embed iframe {
-    display: block;
-    min-height: 500px;
-  }
-
-  @media (max-width: 640px) {
-    .calendar-embed iframe {
-      height: 560px;
-    }
   }
 </style>
