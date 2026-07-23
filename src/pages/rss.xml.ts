@@ -35,7 +35,7 @@ function summaryFromBody(body: string | undefined, max = 200): string {
 export async function GET(context: APIContext) {
   const posts = await getPublishedPosts();
   return rss({
-    title: "HANBIN — A Journal",
+    title: "HANBIN",
     description: "정리 중인 생각을 위한 작은 공간.",
     site: context.site ?? "https://hanbin5.github.io",
     items: posts.map((p) => ({

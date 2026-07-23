@@ -1,0 +1,243 @@
+---
+/**
+ * AboutSection — author bio + recent project.
+ * Shared between the home page (as its lead section) and /about (standalone).
+ */
+---
+<section class="about">
+  <div class="container">
+    <div class="about-head">
+      <div class="kicker">§ About</div>
+      <h1>Hanbin Oh</h1>
+      <p class="lede">
+        3rd-year undergraduate, School of Computer Science and Engineering, Chung-Ang University.
+      </p>
+    </div>
+
+    <div class="about-grid">
+      <!-- ============ left: portrait + meta ============ -->
+      <aside class="about-portrait">
+        <div class="portrait-frame">
+          <img src="/attachments/hanbin-oh.png" alt="Hanbin Oh" />
+        </div>
+
+        <dl class="about-meta">
+          <dt>Name</dt>
+          <dd>Hanbin Oh</dd>
+
+          <dt>Affiliation</dt>
+          <dd>3rd-year undergraduate, School of Computer Science and Engineering, Chung-Ang University</dd>
+
+          <dt>Interests</dt>
+          <dd>Structure-preserving generative models, flow matching, neural operators</dd>
+
+          <dt>Email</dt>
+          <dd><a href="mailto:hanbinftr55@cau.ac.kr">hanbinftr55@cau.ac.kr</a></dd>
+
+          <dt>GitHub</dt>
+          <dd><a href="https://github.com/hanbin5">github.com/hanbin5</a></dd>
+        </dl>
+      </aside>
+
+      <!-- ============ right: prose columns ============ -->
+      <div class="about-body">
+        <h2>Recent project</h2>
+        <p class="project-name">Indory</p>
+        <p>
+          Indoor delivery robot for the last-mile problem.
+        </p>
+        <p>
+          Contribution: Isaac Sim environment, VLA fine-tuning, hardware integration.
+        </p>
+        <div class="video-embed">
+          <iframe
+            src="https://www.youtube.com/embed/DhAfgjuVP2I"
+            title="Indory demo video"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+
+        <ul class="about-list">
+          <li>
+            <span class="what">
+              <a href="https://github.com/capstone-indory">https://github.com/capstone-indory</a>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ===== About section — scoped styles ===== */
+
+  .about {
+    padding: 56px 0 96px;
+  }
+
+  .about-head {
+    max-width: 960px;
+    margin: 0 auto 56px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-head .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent-bright);
+    margin-bottom: 14px;
+  }
+  .about-head h1 {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: clamp(48px, 6vw, 84px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .about-head .lede {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(18px, 2vw, 22px);
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 60ch;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 64px;
+    align-items: start;
+  }
+
+  /* ---------- portrait column ---------- */
+  .about-portrait {
+    position: sticky;
+    top: 32px;
+  }
+  .portrait-frame {
+    aspect-ratio: 3 / 4;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 28px;
+    background: var(--royal-gradient-a);
+  }
+  .portrait-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+
+  .about-meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px 20px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .about-meta dt {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    padding-top: 2px;
+  }
+  .about-meta dd {
+    font-family: var(--serif);
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .about-meta dd a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .about-meta dd a:hover { color: var(--accent-bright); }
+
+  /* ---------- prose column ---------- */
+  .about-body {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .about-body h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin: 40px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .about-body h2:first-child { margin-top: 0; }
+  .about-body p {
+    margin-bottom: 16px;
+    max-width: 62ch;
+  }
+  .about-body a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .about-body a:hover { color: var(--accent-bright); }
+
+  .about-body .project-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent-bright);
+    margin-bottom: 8px;
+  }
+
+  .about-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px 0;
+  }
+  .about-list li {
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--line-soft);
+  }
+  .about-list li:last-child { border-bottom: none; }
+  .about-list .what { font-size: 16px; line-height: 1.55; }
+
+  .video-embed {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    margin: 0 0 24px;
+    max-width: 62ch;
+    background: var(--ink);
+  }
+  .video-embed iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 920px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .about-portrait {
+      position: static;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+  }
+</style>

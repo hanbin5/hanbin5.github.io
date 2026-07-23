@@ -21,7 +21,7 @@ export interface Props {
 }
 const {
   title,
-  description = "정리 중인 생각을 위한 작은 공간. 도구, 주의력, 만드는 일에 관한 조용한 저널.",
+  description = "정리 중인 생각을 위한 작은 공간.",
   ogImage = "/og-default.svg",
   canonical,
 } = Astro.props;
@@ -57,7 +57,7 @@ const ogImageURL = new URL(ogImage, Astro.site);
 <meta name="twitter:image" content={ogImageURL} />
 
 <!-- RSS discovery -->
-<link rel="alternate" type="application/rss+xml" title="HANBIN — A Journal" href="/rss.xml" />
+<link rel="alternate" type="application/rss+xml" title="HANBIN" href="/rss.xml" />
 
 <!-- Fonts (Google CDN; self-host is a future decision) -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
