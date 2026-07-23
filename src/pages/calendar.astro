@@ -4,18 +4,13 @@ import CalendarEmbed from "../components/CalendarEmbed.astro";
 ---
 <JournalLayout
   title="Calendar — HANBIN"
-  description="한빈(Hanbin) · 일정 (Free/Busy)"
+  description="Hanbin Oh · Schedule (Free/Busy)"
 >
   <section class="calendar-page">
     <div class="container">
       <div class="calendar-head">
         <div class="kicker">§ Schedule</div>
         <h1>Calendar</h1>
-        <p class="lede">
-          모든 개인 캘린더를 하나로 합쳐 보여줍니다. 일정 제목이나 내용은
-          공개되지 않고, 비어있는 시간과 <strong>바쁨(Busy)</strong> 블록만
-          표시됩니다.
-        </p>
       </div>
 
       <CalendarEmbed />
@@ -48,18 +43,5 @@ import CalendarEmbed from "../components/CalendarEmbed.astro";
     font-size: clamp(40px, 5vw, 64px);
     letter-spacing: -0.03em;
     line-height: 1;
-    margin-bottom: 18px;
-  }
-  .calendar-head .lede {
-    font-family: var(--serif);
-    font-weight: 300;
-    font-size: clamp(16px, 1.6vw, 18px);
-    line-height: 1.6;
-    color: var(--muted);
-    max-width: 62ch;
-  }
-  .calendar-head .lede strong {
-    color: var(--ink);
-    font-weight: 600;
   }
 </style>
