@@ -11,11 +11,6 @@ import CalendarEmbed from "../components/CalendarEmbed.astro";
       <div class="calendar-head">
         <div class="kicker">§ Schedule</div>
         <h1>Calendar</h1>
-        <p class="lede">
-          All personal calendars merged into a single view. Event titles and
-          details stay private — only free time and <strong>Busy</strong>
-          blocks are shown.
-        </p>
       </div>
 
       <CalendarEmbed />
@@ -48,18 +43,5 @@ import CalendarEmbed from "../components/CalendarEmbed.astro";
     font-size: clamp(40px, 5vw, 64px);
     letter-spacing: -0.03em;
     line-height: 1;
-    margin-bottom: 18px;
-  }
-  .calendar-head .lede {
-    font-family: var(--serif);
-    font-weight: 300;
-    font-size: clamp(16px, 1.6vw, 18px);
-    line-height: 1.6;
-    color: var(--muted);
-    max-width: 62ch;
-  }
-  .calendar-head .lede strong {
-    color: var(--ink);
-    font-weight: 600;
   }
 </style>
