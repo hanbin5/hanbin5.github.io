@@ -1,6 +1,6 @@
 ---
 /**
- * AboutSection — author bio + recent project.
+ * AboutSection — author profile + CV (research, projects, education, skills).
  * Shared between the home page (as its lead section) and /about (standalone).
  */
 ---
@@ -10,7 +10,8 @@
       <div class="kicker">§ About</div>
       <h1>Hanbin Oh</h1>
       <p class="lede">
-        3rd-year undergraduate, School of Computer Science and Engineering, Chung-Ang University.
+        컴퓨터 비전에서 실제 세상을 수학적으로 모델링하는 방법을 개선해
+        문제를 해결하는 것에 관심이 있습니다.
       </p>
     </div>
 
@@ -23,13 +24,13 @@
 
         <dl class="about-meta">
           <dt>Name</dt>
-          <dd>Hanbin Oh</dd>
+          <dd>오한빈 (Hanbin Oh)</dd>
 
           <dt>Affiliation</dt>
-          <dd>3rd-year undergraduate, School of Computer Science and Engineering, Chung-Ang University</dd>
+          <dd>중앙대학교 소프트웨어학부 학사과정 3학년</dd>
 
           <dt>Interests</dt>
-          <dd>Structure-preserving generative models, flow matching, neural operators</dd>
+          <dd>3D vision, robot learning, structure-preserving generative models</dd>
 
           <dt>Email</dt>
           <dd><a href="mailto:hanbinftr55@cau.ac.kr">hanbinftr55@cau.ac.kr</a></dd>
@@ -41,31 +42,158 @@
 
       <!-- ============ right: prose columns ============ -->
       <div class="about-body">
-        <h2>Recent project</h2>
-        <p class="project-name">Indory</p>
-        <p>
-          Indoor delivery robot for the last-mile problem.
-        </p>
-        <p>
-          Contribution: Isaac Sim environment, VLA fine-tuning, hardware integration.
-        </p>
-        <div class="video-embed">
-          <iframe
-            src="https://www.youtube.com/embed/DhAfgjuVP2I"
-            title="Indory demo video"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen
-          ></iframe>
+        <!-- ---------- research ---------- -->
+        <h2>Research experience</h2>
+
+        <article class="entry">
+          <h3>U-ARE-ME 재현 및 확장 연구</h3>
+          <p class="entry-meta">
+            Spatial Intelligence Lab @ CAU · 2025.09 – 2026.02 · 학부연구생
+          </p>
+          <p class="entry-ref">
+            Uncertainty-Aware Rotation Estimation in Manhattan Environments
+            (Patwardhan, Rhodes, Bae, Davison ·
+            <a href="https://arxiv.org/abs/2403.15583">arXiv:2403.15583</a>, 2024)
+            · 공식 구현 재현 후 자체 확장 실험 수행
+          </p>
+          <p>
+            카메라 보정값과 깊이 센서 없이 단일 RGB 프레임의 <strong>surface normal</strong>
+            예측과 Manhattan World 가정만으로 <strong>SO(3) 다양체 위에서 카메라 회전과
+            불확실성을 동시에 최적화</strong>하는 파이프라인을 재현해 원 논문의 성능을
+            검증했습니다. 이후 카메라 움직임의 전환(<strong>motion transition</strong>)이
+            급격한 영상에서 프레임 간 회전 추정이 불안정해지는 구간을 개선 대상으로
+            정의하고, 영상의 흔들림 정도를 정량화하는 지표를 설계해 흔들림 크기와 회전
+            추정 오차 사이의 관계 및 다중 프레임 최적화가 무너지는 조건을 분석했습니다.
+            이를 바탕으로 장면 전체가 하나의 직교 구조를 따른다는 가정을 여러 개의 국소
+            직교 구조로 완화한 <strong>Mixture of Manhattan World</strong>와
+            <strong>motion blur를 이용한 optical flow 추정</strong>을 확장 방안으로 함께
+            검토했으며, 실제 공간에 더 잘 맞는 가정으로 정확도를 개선하는 방향입니다
+            (설계 단계까지 진행).
+          </p>
+        </article>
+
+        <article class="entry">
+          <h3>VLA action expert의 flow matching 개선</h3>
+          <p class="entry-meta">2026.05 – 현재</p>
+          <p>
+            VLA의 <strong>action expert</strong>는 노이즈 분포를 행동 분포로 옮기는 경로를
+            <strong>flow matching</strong>으로 학습하며, 이 경로의 형태는 가우시안 가정에
+            기반한 고정된 변환으로 주어집니다. 이 변환이 전제하는 구조가 로봇의 행동
+            공간과 어긋나는 지점을 찾아, <strong>행동 공간의 구조를 반영하도록 경로의
+            형태를 다시 설계</strong>해 행동 생성 성능을 높이는 연구를 진행 중입니다.
+            또한 Structure-preserving generative dynamics 관점에서 로봇의 동역학에 더 잘
+            맞는 사전 가정을 flow matching에 반영하는 방향을 탐색하고 있습니다.
+          </p>
+        </article>
+
+        <!-- ---------- projects ---------- -->
+        <h2>Projects</h2>
+
+        <article class="entry">
+          <h3>Indory — 실내 배송 로봇</h3>
+          <p class="entry-meta">
+            캡스톤 ·
+            <a href="https://github.com/capstone-indory">github.com/capstone-indory</a>
+          </p>
+          <p>
+            라스트마일 물류의 실내 구간을 자율 주행으로 처리하는 로봇 시스템입니다.
+            NVIDIA <strong>Isaac Sim</strong> 위에 로봇이 주행할 실내 공간을 시뮬레이션으로
+            구축했습니다. 그리고 실제 로봇에서 <strong>teleoperation</strong> 환경을 구축해
+            시연 데이터를 수집하고, 그 데이터로 <strong>Vision-Language-Action(VLA)
+            모델</strong>을 학습시킨 뒤 성능을 검증하는 전 주기를 수행했습니다. 시스템
+            측면에서는 카메라 3대의 데이터를 AI 서버로 빠르게 전송하고 로봇의 행동 데이터를
+            실시간으로 되받는 파이프라인을 설계했으며, 여기에 모니터링·관제 시스템을
+            통합해 로봇의 상태를 확인하고 제어할 수 있도록 구성했습니다.
+          </p>
+          <div class="video-embed">
+            <iframe
+              src="https://www.youtube.com/embed/DhAfgjuVP2I"
+              title="Indory demo video"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </article>
+
+        <!-- ---------- education ---------- -->
+        <h2>Education</h2>
+
+        <article class="entry">
+          <h3>중앙대학교 소프트웨어대학 소프트웨어학부</h3>
+          <p class="entry-meta">학사과정 3학년 재학</p>
+        </article>
+
+        <!-- ---------- coursework ---------- -->
+        <h2>Self-directed coursework</h2>
+
+        <article class="entry">
+          <h3>Stanford CS231A: Computer Vision — From 3D Reconstruction to Recognition</h3>
+          <p class="entry-meta">공개 강의 · 스터디 그룹 수강</p>
+          <p>
+            카메라 모델과 캘리브레이션, 에피폴라 기하, 스테레오 및 다중 시점 3D
+            복원(SfM), 3차원 point cloud 표현과 정합, 3D 인식까지 강의·과제 기반으로
+            학습했습니다.
+          </p>
+        </article>
+
+        <!-- ---------- skills ---------- -->
+        <h2>Skills</h2>
+
+        <div class="skill">
+          <p class="skill-name">3D Vision</p>
+          <p class="skill-desc">
+            사진과 영상만으로 카메라가 어디서 어느 방향을 보고 찍었는지 알아내고, 장면의
+            3차원 형태를 복원할 수 있습니다. 그 결과를 얼마나 믿을 수 있는지도 함께
+            계산합니다.
+          </p>
+          <ul class="skill-tags">
+            <li>Surface normal estimation</li>
+            <li>Manhattan World / SO(3) 최적화</li>
+            <li>Multi-view 3D reconstruction (SfM)</li>
+            <li>SLAM</li>
+          </ul>
         </div>
 
-        <ul class="about-list">
-          <li>
-            <span class="what">
-              <a href="https://github.com/capstone-indory">https://github.com/capstone-indory</a>
-            </span>
-          </li>
-        </ul>
+        <div class="skill">
+          <p class="skill-name">Robotics</p>
+          <p class="skill-desc">
+            로봇이 움직일 공간을 가상 환경으로 만들고, 사람이 조작한 시연을 데이터로 모아
+            로봇이 스스로 움직이도록 학습시킨 뒤 실제 기체에서 검증할 수 있습니다.
+          </p>
+          <ul class="skill-tags">
+            <li>NVIDIA Isaac Sim</li>
+            <li>IsaacLab</li>
+            <li>LeRobot</li>
+            <li>Teleoperation 환경 구축</li>
+            <li>VLA 모델 학습·검증</li>
+          </ul>
+        </div>
+
+        <div class="skill">
+          <p class="skill-name">Generative model</p>
+          <p class="skill-desc">
+            데이터를 만들어내는 생성 모델의 수학적 구조를 설계하고 개선할 수 있습니다.
+          </p>
+          <ul class="skill-tags">
+            <li>Flow matching</li>
+            <li>Neural operators</li>
+            <li>Structure-preserving generative models</li>
+          </ul>
+        </div>
+
+        <div class="skill">
+          <p class="skill-name">Engineering</p>
+          <p class="skill-desc">
+            딥러닝 학습용 서버를 직접 구축해 운용하고, 결과를 확인할 웹 서비스까지 만들 수
+            있습니다.
+          </p>
+          <ul class="skill-tags">
+            <li>Linux</li>
+            <li>CUDA GPU 학습 환경(자체 홈랩) 구축·운용</li>
+            <li>Spring Boot / React / MySQL</li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -76,6 +204,11 @@
 
   .about {
     padding: 56px 0 96px;
+    /* Korean breaks at any character by default, which shreds words across
+       lines. keep-all breaks on spaces instead; overflow-wrap is the escape
+       hatch for a long Latin term that cannot fit its own line. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
 
   .about-head {
@@ -177,7 +310,7 @@
     font-weight: 700;
     font-size: 22px;
     letter-spacing: -0.01em;
-    margin: 40px 0 14px;
+    margin: 48px 0 22px;
     padding-bottom: 8px;
     border-bottom: 2px solid var(--ink);
   }
@@ -192,8 +325,66 @@
     text-underline-offset: 3px;
   }
   .about-body a:hover { color: var(--accent-bright); }
+  .about-body strong { font-weight: 700; }
 
-  .about-body .project-name {
+  /* ---------- CV entry ---------- */
+  /* One research position / project / degree. The dotted rule separates
+     siblings without competing with the solid h2 rule above the group. */
+  .entry {
+    padding-bottom: 32px;
+    margin-bottom: 32px;
+    border-bottom: 1px dotted var(--line-soft);
+  }
+  .entry:last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+  .entry h3 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 19px;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+    max-width: 62ch;
+  }
+  /* Affiliation · period · title. Mono for the tabular feel, but no
+     uppercase/wide tracking — both wreck Korean glyph spacing. */
+  .entry-meta {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .entry-meta a { color: var(--accent); }
+  /* Paper being reproduced / extended — set apart from the author's own prose. */
+  .entry-ref {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--muted);
+    border-left: 2px solid var(--line-soft);
+    padding-left: 14px;
+    margin-bottom: 16px;
+  }
+  .entry > p:last-child { margin-bottom: 0; }
+
+  /* ---------- skills ---------- */
+  .skill {
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    border-bottom: 1px dotted var(--line-soft);
+  }
+  .skill:last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+  .skill-name {
     font-family: var(--mono);
     font-size: 13px;
     text-transform: uppercase;
@@ -201,23 +392,34 @@
     color: var(--accent-bright);
     margin-bottom: 8px;
   }
-
-  .about-list {
+  .skill-desc {
+    font-size: 17px;
+    margin-bottom: 12px;
+  }
+  /* Static labels, not the archive's interactive .chip — no hover/cursor. */
+  .skill-tags {
     list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
     padding: 0;
-    margin: 0 0 16px 0;
+    margin: 0;
+    max-width: 62ch;
   }
-  .about-list li {
-    padding: 8px 0;
-    border-bottom: 1px dotted var(--line-soft);
+  .skill-tags li {
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    border: 1px solid var(--line-soft);
+    padding: 6px 10px;
   }
-  .about-list li:last-child { border-bottom: none; }
-  .about-list .what { font-size: 16px; line-height: 1.55; }
 
   .video-embed {
     position: relative;
     aspect-ratio: 16 / 9;
-    margin: 0 0 24px;
+    margin: 0;
     max-width: 62ch;
     background: var(--ink);
   }
